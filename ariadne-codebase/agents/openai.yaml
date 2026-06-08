@@ -1,4 +1,4 @@
 interface:
-  display_name: "Ariadne Codebase"
-  short_description: "Turn real repo patterns into agent guidance"
-  default_prompt: "Use $ariadne-codebase to analyze this repository and generate project-specific coding guidance."
+  display_name: "Ariadne Codebase Memory"
+  short_description: "Create repo memory for AI coding agents"
+  default_prompt: "Use $ariadne-codebase to refresh project session memory for Codex, Claude Code, and Gemini."

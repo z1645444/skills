@@ -1,36 +1,112 @@
 # Output Template For Codebase Guidance
 
-Use this template when creating repo-local guidance such as `CODEBASE.md`, `docs/ai/CODEBASE.md`, a concise `AGENTS.md`/`CLAUDE.md` supplement, or a project-specific skill body. Delete sections that do not apply.
+Use this template when creating repo-local session memory such as `docs/ai/CODEBASE.md`, a concise `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` supplement, or a project-specific skill body. Delete sections that do not apply.
 
-For small and medium repositories, one `CODEBASE.md` is usually enough. For large repositories, monorepos, or long-lived brownfield systems, prefer a split map so future sessions can load only the relevant documents.
+For small and medium repositories, one `docs/ai/CODEBASE.md` is usually enough. For large repositories, monorepos, or long-lived brownfield systems, prefer a split map under `docs/ai/` so future sessions can load only the relevant documents.
+
+Every canonical project memory document should preserve this marker header near the top:
+
+```markdown
+<!-- ariadne-codebase: project-memory v1 -->
+<!-- Purpose: canonical project guidance for Codex, Claude Code, and Gemini CLI sessions. -->
+<!-- Last evidence refresh: <date>, commit <sha-or-branch>. -->
+```
+
+This marks curated session memory, not generated-only output. Human corrections are allowed.
+
+## Output Mode
+
+Choose one primary output shape before writing:
+
+- Single document: write `docs/ai/CODEBASE.md` with the full section order below. Use this for small and medium repositories.
+- Split map: write `docs/ai/CODEBASE.md` as a short entry map, then put detailed guidance in focused files under `docs/ai/`. Use this for large repositories, monorepos, or long-lived systems.
+- Entrypoint update only: when a canonical memory document already exists and is current, update only `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` to point to it.
+
+Do not duplicate long guidance between `CODEBASE.md` and split files. In split mode, `CODEBASE.md` should contain only fast rules, required reads, map links, and the most important open questions.
 
 ## Split Codebase Map
 
 When splitting the map, use these filenames and scopes:
 
+- `CODEBASE.md`: short entry map, highest-impact rules, required reads, and links to split documents.
 - `STACK.md`: languages, runtimes, package managers, frameworks, build tools, key dependencies.
 - `INTEGRATIONS.md`: external APIs, databases, storage, auth providers, observability, CI/CD, deployment.
 - `ARCHITECTURE.md`: system layers, entry points, data flow, core abstractions, cross-cutting concerns.
 - `STRUCTURE.md`: directory purposes, naming, where to add new files, special/generated directories.
 - `CONVENTIONS.md`: style, imports, module boundaries, wrapper usage, error handling, comments, file granularity.
+- `UI_UX.md`: design system, shared components, layout patterns, tables, forms, modals, copy rules, and mature UI examples.
 - `TESTING.md`: test tools, file locations, fixtures/mocks, commands, meaningful coverage gaps.
 - `CONCERNS.md`: tech debt, fragile areas, performance risks, security risks, dependency risks, missing tests.
 
-Keep `AGENTS.md` and `CLAUDE.md` short. Point them to the split map instead of duplicating details.
+Keep `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` short. Point them to the split map instead of duplicating details.
+
+## Section Order
+
+For a full single-document `CODEBASE.md`, keep sections in this order:
+
+1. Marker header and title.
+2. Fast rules: 3-6 bullets that matter before editing.
+3. Scope and authority.
+4. Evidence and confidence.
+5. Stack and commands.
+6. Directory and module shape.
+7. Mature examples and example-source ranking.
+8. UI/framework and UI/UX memory.
+9. Data access, API usage, state, validation, and business logic.
+10. Testing and verification.
+11. Concerns, sensitive files, do-not rules, and open questions.
+12. Documentation and agent-entry rules.
+
+For split maps, keep this same progression across the focused files instead of copying every section into every file.
+
+## Agent Entry Points
+
+Use these root files as short pointers to the shared project memory:
+
+- `AGENTS.md`: Codex-compatible agents.
+- `CLAUDE.md`: Claude Code.
+- `GEMINI.md`: Gemini CLI.
+
+Recommended entry point body:
+
+```markdown
+Read `docs/ai/CODEBASE.md` before editing. Follow more specific local agent files when present.
+```
 
 ## Title
 
-`# <Project Name> Codebase Guidance`
+```markdown
+<!-- ariadne-codebase: project-memory v1 -->
+<!-- Purpose: canonical project guidance for Codex, Claude Code, and Gemini CLI sessions. -->
+<!-- Last evidence refresh: <date>, commit <sha-or-branch>. -->
+
+# <Project Name> Codebase Guidance
+```
 
 Start with 3-6 bullets that a future coding session must know before editing.
 
 ## Scope And Authority
 
 - State which directories, packages, or apps the guidance covers.
-- Link to existing `AGENTS.md`, `CLAUDE.md`, README files, ADRs, or framework docs.
+- Link to existing `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, README files, ADRs, or framework docs.
 - Link to project-local skills under `.claude/skills/`, `.agents/skills/`, `.codex/skills/`, or `skills/` when they define relevant conventions.
 - State the evidence date or commit range if useful.
 - State that repository code and local agent files override this document when they conflict.
+
+## Evidence And Confidence
+
+Use confidence labels for rules that affect implementation choices:
+
+- `high confidence`: backed by several current production examples, source types, generated APIs, tests, or enforced tooling.
+- `medium confidence`: backed by one or two current examples or documentation that matches the code.
+- `low confidence`: inferred from a single example, stale-looking code, copied examples, or mixed evidence.
+
+For important rules, include source paths:
+
+- `<rule>`: `<confidence>`; evidence: `<path>`, `<path>`.
+- `<rule>`: `low confidence`; observed `<path>`, but verify before applying broadly.
+
+Do not turn low-confidence observations into mandatory rules. Move conflicts and missing evidence to `Open Questions`.
 
 ## Stack And Commands
 
@@ -75,6 +151,22 @@ If the repository has `example`, `examples`, `best-practice`, `best-practices`, 
 
 For admin systems, describe the internal wrapper API with exact imports and props. Include short examples only when they are copied from or directly derived from real call sites.
 
+## UI/UX Memory
+
+When the repository has user-facing UI, admin pages, or shared design components, keep `UI_UX.md` focused on operational patterns:
+
+- Component library and internal wrappers: exact imports, source files, and when to use each wrapper.
+- Layout patterns: page shells, toolbars, filters, sidebars, tabs, detail panes, and responsive behavior.
+- Tables and lists: canonical table component, column definitions, search/filter layout, pagination, row actions, bulk actions, loading and empty states.
+- Forms and modals: form wrapper, validation style, submit/cancel behavior, modal sizing, drawer usage, field grouping, error display.
+- Detail pages: summary/header pattern, metadata placement, action buttons, related lists, audit/status sections.
+- Copy and language: user-facing language, terminology, capitalization, units, dates, empty/error text style.
+- Visual conventions: spacing, density, colors, icons, button hierarchy, destructive actions, disabled states.
+- Mature examples: screens or modules to follow, with one-line reasons and evidence paths.
+- Do not recreate: shared components, styles, layouts, or UX flows that already have canonical implementations.
+
+Every UI/UX rule should include evidence paths and a confidence label when the pattern is not enforced by code.
+
 ## Data Access And API Usage
 
 - Request client or generated API layer.
@@ -110,7 +202,7 @@ Add a clear rule such as "Do not call `fetch` directly" only when the repository
 ## Documentation Rules
 
 - Where to update docs for new public behavior.
-- How to update agent guidance without duplicating details between `AGENTS.md`, `CLAUDE.md`, and shared docs.
+- How to update agent guidance without duplicating details between `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and shared docs.
 
 ## Sensitive Files
 
@@ -126,11 +218,14 @@ Only include rules that are backed by codebase evidence:
 - Do not bypass `<framework wrapper>` for admin pages.
 - Do not place feature-specific components in shared directories unless reused.
 
+Each do-not rule should include at least one evidence path or be removed.
+
 ## Open Questions
 
 List conflicts or weak evidence instead of guessing:
 
 - `<question>`: observed `<path A>` but conflicting `<path B>`.
+- `<question>`: `low confidence`; only one current example found at `<path>`.
 
 ## Optional Project Skill Shape
 
@@ -144,7 +239,7 @@ description: Project-specific coding guidance for <project>. Use when making cod
 
 # <Project Name> Codebase
 
-Read `<repo-relative-path-to-guidance>` before editing. Follow local `AGENTS.md` or `CLAUDE.md` files first when they are more specific.
+Read `<repo-relative-path-to-guidance>` before editing. Follow local `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` files first when they are more specific.
 
 ## Fast Rules
 
