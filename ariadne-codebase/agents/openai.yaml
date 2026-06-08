@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ariadne Codebase"
+  short_description: "Turn real repo patterns into agent guidance"
+  default_prompt: "Use $ariadne-codebase to analyze this repository and generate project-specific coding guidance."
