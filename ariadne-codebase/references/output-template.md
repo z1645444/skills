@@ -20,7 +20,7 @@ Choose one primary output shape before writing:
 
 - Single document: write `docs/ai/CODEBASE.md` with the full section order below. Use this for small and medium repositories.
 - Split map: write `docs/ai/CODEBASE.md` as a short entry map, then put detailed guidance in focused files under `docs/ai/`. Use this for large repositories, monorepos, or long-lived systems.
-- Entrypoint update only: when a canonical memory document already exists and is current, update only `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` to point to it.
+- Entrypoint update only: when a canonical memory document already exists and is current, add or verify a pointer in `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` without replacing existing rules.
 
 Do not duplicate long guidance between `CODEBASE.md` and split files. In split mode, `CODEBASE.md` should contain only fast rules, required reads, map links, and the most important open questions.
 
@@ -38,7 +38,21 @@ When splitting the map, use these filenames and scopes:
 - `TESTING.md`: test tools, file locations, fixtures/mocks, commands, meaningful coverage gaps.
 - `CONCERNS.md`: tech debt, fragile areas, performance risks, security risks, dependency risks, missing tests.
 
-Keep `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` short. Point them to the split map instead of duplicating details.
+In split mode, `CODEBASE.md` must include a task-based read map near the top:
+
+```markdown
+## Required Reads By Task
+
+- Any code change: read `STRUCTURE.md` and `CONVENTIONS.md`.
+- UI/page change: also read `UI_UX.md`.
+- API/integration change: also read `INTEGRATIONS.md`.
+- Architecture or cross-module change: also read `ARCHITECTURE.md`.
+- Dependency/build tooling change: also read `STACK.md`.
+- Test or behavior change: also read `TESTING.md`.
+- Risky legacy area or large file: also read `CONCERNS.md`.
+```
+
+Keep newly created `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` files short. For existing files, preserve their rules and add only a pointer to the split map or canonical memory document.
 
 ## Section Order
 
@@ -61,16 +75,16 @@ For split maps, keep this same progression across the focused files instead of c
 
 ## Agent Entry Points
 
-Use these root files as short pointers to the shared project memory:
+Use these root files as pointers to the shared project memory:
 
 - `AGENTS.md`: Codex-compatible agents.
 - `CLAUDE.md`: Claude Code.
 - `GEMINI.md`: Gemini CLI.
 
-Recommended entry point body:
+When the file is missing or empty, use a short body. When it already contains project or tool-specific rules, insert or append only this pointer and preserve the rest of the file:
 
 ```markdown
-Read `docs/ai/CODEBASE.md` before editing. Follow more specific local agent files when present.
+Read `docs/ai/CODEBASE.md` before editing. Follow this file and more specific local agent files when they add stricter rules.
 ```
 
 ## Title

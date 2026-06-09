@@ -16,10 +16,11 @@ The intended durable output is a curated project memory layer for Codex, Claude 
 1. Establish the target output.
    - If the user asks for "codebase docs", "project memory", or session guidance, create or update the default repo-local memory file at `docs/ai/CODEBASE.md`.
    - If the repository already has an equivalent guidance location, update that file instead and keep the entry points pointing to it.
-   - If the user asks to guide Codex, Claude Code, or Gemini CLI, update the appropriate short entry point and point it to the shared guidance file when possible:
+   - If the user asks to guide Codex, Claude Code, or Gemini CLI, update the appropriate agent entry point by adding a pointer to the shared guidance file when possible:
      - `AGENTS.md` for Codex-compatible agents.
      - `CLAUDE.md` for Claude Code.
      - `GEMINI.md` for Gemini CLI.
+   - Preserve existing entry point instructions. Create a short entry point only when the file is missing or has no project-specific content; otherwise insert or append the shared-guidance pointer without deleting, summarizing, or rewriting existing rules.
    - If the user asks for a reusable project skill, create a focused skill that loads the generated guidance and any project-specific references.
    - For large or long-lived repositories, prefer a split project memory map under `docs/ai/` over one huge document: `CODEBASE.md`, `STACK.md`, `INTEGRATIONS.md`, `ARCHITECTURE.md`, `STRUCTURE.md`, `CONVENTIONS.md`, `UI_UX.md`, `TESTING.md`, and `CONCERNS.md`.
 
@@ -67,14 +68,16 @@ The intended durable output is a curated project memory layer for Codex, Claude 
      ```
 
    - This header marks curated session memory, not generated-only output. Human corrections are allowed and should preserve the marker.
-   - Keep `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` as short entry points. They should tell the agent to read the canonical project memory and avoid duplicating detailed rules:
+   - Keep newly created `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` files as short entry points. They should tell the agent to read the canonical project memory and avoid duplicating detailed rules.
+   - For existing entry point files, add the pointer surgically and preserve the rest of the file:
 
      ```markdown
-     Read `docs/ai/CODEBASE.md` before editing. Follow more specific local agent files when present.
+     Read `docs/ai/CODEBASE.md` before editing. Follow this file and more specific local agent files when they add stricter rules.
      ```
 
    - Keep the top of the document short enough for future sessions to scan quickly.
    - For split maps, write separate focused documents instead of duplicating one large overview: `CODEBASE.md`, `STACK.md`, `INTEGRATIONS.md`, `ARCHITECTURE.md`, `STRUCTURE.md`, `CONVENTIONS.md`, `UI_UX.md`, `TESTING.md`, and `CONCERNS.md`.
+   - In split maps, `CODEBASE.md` must include a `Required Reads By Task` section mapping common task types to the detailed documents agents should read before editing.
    - Add "do not" rules only when the codebase gives clear evidence, such as an existing request wrapper or generated API layer.
    - If examples or best-practice folders exist, document which ones are canonical, stale, generated, or only useful as narrow fallback references.
    - Record unresolved questions instead of guessing when evidence conflicts.
@@ -82,9 +85,10 @@ The intended durable output is a curated project memory layer for Codex, Claude 
 
 6. Validate the result.
    - Check that the guidance would answer: where to put a new feature, how large files should be, how to call APIs, how to use shared framework components, and which commands/tests to run.
+   - For split maps, verify `CODEBASE.md` includes task-based required reads for general code changes, UI/page changes, API/integration changes, tests, and risky legacy areas.
    - Verify links and file paths.
    - Ensure no secrets, tokens, or `.env` values were copied into the output.
-   - If modifying `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`, keep those files short and point to the detailed shared document to avoid drift.
+   - If modifying `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`, verify existing rules were preserved and the shared-guidance pointer was added without duplicating detailed guidance.
 
 ## Project Skill Example Resources
 

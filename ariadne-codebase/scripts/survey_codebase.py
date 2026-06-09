@@ -40,6 +40,7 @@ IGNORE_DIRS = {
 CONFIG_NAMES = {
     "AGENTS.md",
     "CLAUDE.md",
+    "GEMINI.md",
     "README.md",
     "package.json",
     "pnpm-lock.yaml",
@@ -143,6 +144,13 @@ EXAMPLE_DIR_RE = re.compile(
     re.I,
 )
 TODO_RE = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b", re.I)
+SECRET_CONTENT_RE = re.compile(
+    r"(?im)^\s*['\"]?"
+    r"(?:password|passwd|pwd|token|secret|private[_-]?key|access[_-]?key(?:[_-]?id)?|"
+    r"secret[_-]?access[_-]?key|client[_-]?secret|authorization|api[_-]?key|auth[_-]?token)"
+    r"['\"]?\s*[:=]"
+)
+PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")
 
 SECRET_SUFFIXES = {
     ".jks",
@@ -151,6 +159,8 @@ SECRET_SUFFIXES = {
     ".p12",
     ".pem",
     ".pfx",
+    ".tfstate",
+    ".tfvars",
     ".truststore",
 }
 
@@ -158,7 +168,13 @@ SECRET_EXACT_NAMES = {
     ".netrc",
     ".npmrc",
     ".pypirc",
+    "aws-exports.js",
+    "google-services.json",
+    "googleservice-info.plist",
+    "kubeconfig",
+    "local.settings.json",
     "serviceaccountkey.json",
+    "terraform.tfvars",
 }
 
 CONFIG_LIKE_SECRET_SUFFIXES = {
@@ -172,6 +188,30 @@ CONFIG_LIKE_SECRET_SUFFIXES = {
     ".txt",
     ".yaml",
     ".yml",
+}
+
+CONTENT_SECRET_SCAN_SUFFIXES = CONFIG_LIKE_SECRET_SUFFIXES | {
+    ".plist",
+    ".tf",
+    ".tfvars",
+    ".xml",
+}
+
+HIGH_RISK_CONFIG_DIRS = {
+    ".aws",
+    ".azure",
+    ".gcp",
+    ".kube",
+    ".ssh",
+    "certs",
+    "certificates",
+    "deploy",
+    "deployment",
+    "deployments",
+    "helm",
+    "infra",
+    "infrastructure",
+    "terraform",
 }
 
 
@@ -199,13 +239,26 @@ def rel(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def is_sensitive_path(path: Path) -> bool:
-    parts = [part.lower() for part in path.parts]
+def sensitivity_parts(path: Path, root: Path | None = None) -> list[str]:
+    if root is not None:
+        try:
+            path = path.relative_to(root)
+        except ValueError:
+            pass
+    return [part.lower() for part in path.parts]
+
+
+def is_sensitive_path(path: Path, root: Path | None = None) -> bool:
+    parts = sensitivity_parts(path, root)
     name = path.name.lower()
     stem = path.stem.lower()
     suffix = path.suffix.lower()
     config_like = suffix in CONFIG_LIKE_SECRET_SUFFIXES
 
+    if suffix in CONTENT_SECRET_SCAN_SUFFIXES and any(
+        part in HIGH_RISK_CONFIG_DIRS for part in parts[:-1]
+    ):
+        return True
     if name == ".env" or name.startswith(".env.") or name.endswith(".env"):
         return True
     if name in SECRET_EXACT_NAMES:
@@ -213,6 +266,15 @@ def is_sensitive_path(path: Path) -> bool:
     if suffix in SECRET_SUFFIXES:
         return True
     if name.startswith(("id_rsa", "id_ed25519", "id_dsa")):
+        return True
+    if suffix == ".json" and (
+        name.startswith("firebase-adminsdk")
+        or "-firebase-adminsdk-" in name
+        or "service-account" in stem
+        or "service_account" in stem
+    ):
+        return True
+    if ".tfstate" in name:
         return True
     if config_like and name.startswith(("credentials.", "secrets.")):
         return True
@@ -225,12 +287,16 @@ def is_sensitive_path(path: Path) -> bool:
     return False
 
 
-def is_priority_file(path: Path) -> bool:
+def contains_secret_like_content(text: str) -> bool:
+    return bool(SECRET_CONTENT_RE.search(text) or PRIVATE_KEY_RE.search(text))
+
+
+def is_priority_file(path: Path, root: Path | None = None) -> bool:
     return (
         path.suffix.lower() in TEXT_EXTENSIONS
         or path.name in CONFIG_NAMES
         or path.name.startswith((".eslint", ".prettier"))
-        or is_sensitive_path(path)
+        or is_sensitive_path(path, root)
     )
 
 
@@ -248,7 +314,7 @@ def iter_files(root: Path, max_files: int) -> Iterable[Path]:
             path = Path(dirpath) / filename
             if path.is_symlink():
                 continue
-            if is_priority_file(path):
+            if is_priority_file(path, root):
                 if len(priority) < max_files:
                     priority.append(path)
             elif len(fallback) < max_files:
@@ -262,13 +328,19 @@ def iter_files(root: Path, max_files: int) -> Iterable[Path]:
             yield path
 
 
-def read_text(path: Path, limit: int = 400_000) -> str:
+def read_text(path: Path, root: Path | None = None, limit: int = 400_000) -> str:
     try:
-        if is_sensitive_path(path):
+        if is_sensitive_path(path, root):
             return ""
         if path.stat().st_size > limit:
             return ""
-        return path.read_text(encoding="utf-8", errors="ignore")
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if (
+            path.suffix.lower() in CONTENT_SECRET_SCAN_SUFFIXES
+            and contains_secret_like_content(text)
+        ):
+            return ""
+        return text
     except OSError:
         return ""
 
@@ -287,7 +359,7 @@ def load_package_jsons(files: list[Path], root: Path) -> tuple[dict[str, list[st
     package_files = [path for path in files if path.name == "package.json"][:12]
     for path in package_files:
         try:
-            data = json.loads(read_text(path))
+            data = json.loads(read_text(path, root=root))
         except json.JSONDecodeError:
             continue
         scripts = data.get("scripts") or {}
@@ -366,7 +438,7 @@ def project_skill_files(files: list[Path], root: Path) -> list[str]:
 
 
 def sensitive_files(files: list[Path], root: Path) -> list[str]:
-    return sorted(rel(path, root) for path in files if is_sensitive_path(path))
+    return sorted(rel(path, root) for path in files if is_sensitive_path(path, root))
 
 
 def concern_signals(files: list[Path], root: Path) -> tuple[Counter[str], list[tuple[str, int]]]:
@@ -376,7 +448,7 @@ def concern_signals(files: list[Path], root: Path) -> tuple[Counter[str], list[t
     for path in files:
         if path.suffix.lower() not in SOURCE_EXTENSIONS:
             continue
-        text = read_text(path)
+        text = read_text(path, root=root)
         if not text:
             continue
         rel_path = rel(path, root)
@@ -389,14 +461,28 @@ def concern_signals(files: list[Path], root: Path) -> tuple[Counter[str], list[t
     return todos, large_sources
 
 
-def recently_touched_files(root: Path, limit: int) -> Counter[str]:
+def git_scope(root: Path) -> tuple[str, str]:
+    git_root = run(["git", "rev-parse", "--show-toplevel"], root)
+    if not git_root:
+        return "", ""
+    prefix = run(["git", "rev-parse", "--show-prefix"], root)
+    return git_root, prefix
+
+
+def normalize_git_path(path: str, prefix: str) -> str:
+    if prefix and path.startswith(prefix):
+        return path[len(prefix) :]
+    return path
+
+
+def recently_touched_files(root: Path, limit: int, prefix: str) -> Counter[str]:
     output = run(
-        ["git", "log", f"-n{limit}", "--name-only", "--pretty=format:"],
+        ["git", "log", f"-n{limit}", "--name-only", "--pretty=format:", "--", "."],
         root,
     )
     counts: Counter[str] = Counter()
     for line in output.splitlines():
-        line = line.strip()
+        line = normalize_git_path(line.strip(), prefix)
         if line:
             counts[line] += 1
     return counts
@@ -411,7 +497,7 @@ def grep_signals(files: list[Path], root: Path) -> tuple[list[str], list[str], l
         if path.suffix.lower() not in TEXT_EXTENSIONS:
             continue
         lower_path = rel_path.lower()
-        text = read_text(path)
+        text = read_text(path, root=root)
         if not text:
             continue
         if ADMIN_IMPORT_RE.search(text):
@@ -448,9 +534,13 @@ def format_line_counts(items: list[tuple[str, int]], limit: int = 20) -> str:
 def build_report(root: Path, max_files: int, recent_commits: int) -> str:
     root = root.resolve()
     files = list(iter_files(root, max_files=max_files))
-    git_root = run(["git", "rev-parse", "--show-toplevel"], root)
+    git_root, git_prefix = git_scope(root)
     branch = run(["git", "branch", "--show-current"], root)
-    recent_log = run(["git", "log", f"-n{recent_commits}", "--oneline", "--decorate"], root)
+    recent_log = (
+        run(["git", "log", f"-n{recent_commits}", "--oneline", "--decorate", "--", "."], root)
+        if git_root
+        else ""
+    )
     configs = find_configs(files, root)
     package_scripts, packages = load_package_jsons(files, root)
     admin_packages = [name for name in packages if name in ADMIN_PACKAGES]
@@ -459,7 +549,7 @@ def build_report(root: Path, max_files: int, recent_commits: int) -> str:
     skill_files = project_skill_files(files, root)
     secret_files = sensitive_files(files, root)
     todos, large_sources = concern_signals(files, root)
-    touched = recently_touched_files(root, recent_commits) if git_root else Counter()
+    touched = recently_touched_files(root, recent_commits, git_prefix) if git_root else Counter()
 
     lines: list[str] = []
     lines.append(f"# Codebase Survey: `{root}`\n\n")
@@ -469,6 +559,7 @@ def build_report(root: Path, max_files: int, recent_commits: int) -> str:
     lines.append("## Repository\n\n")
     lines.append(f"- Root: `{root}`\n")
     lines.append(f"- Git root: `{git_root or 'not detected'}`\n")
+    lines.append(f"- Git path scope: `{git_prefix.rstrip('/') or '.'}`\n")
     lines.append(f"- Current branch: `{branch or 'not detected'}`\n")
     lines.append(f"- Files scanned: {len(files)} (limit {max_files})\n")
     lines.append(f"- Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
