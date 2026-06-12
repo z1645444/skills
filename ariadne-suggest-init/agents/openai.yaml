@@ -1,4 +1,4 @@
 interface:
   display_name: "Ariadne Suggest Init"
-  short_description: "Bootstrap .codebase suggestions"
-  default_prompt: "Use $ariadne-suggest-init to generate a reviewable .codebase bootstrap suggestion."
+  short_description: "Create initial .codebase pack"
+  default_prompt: "Use $ariadne-suggest-init to directly create the initial .codebase Codebase Knowledge Pack when no pack exists."

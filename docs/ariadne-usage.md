@@ -1,4 +1,4 @@
-Ariadne 使用说明
+# Ariadne 使用说明
 
 Ariadne 是一组以 `ariadne-` 开头的可组合 skills，用于为 management system frontend project 生成和维护仓库本地的 `.codebase/` 项目认知文档。
 
@@ -27,11 +27,11 @@ scripts/install.sh gemini
 首次在某个项目中使用：
 
 1. 运行 `ariadne-suggest-init`。
-2. review 生成的 `.codebase/meta/suggestions/init-*.md`。
-3. 确认后运行 `ariadne-apply-suggestion <suggestion-id>`。
-4. 运行 `ariadne-check-pack` 检查 `.codebase/` 是否完整。
-5. 运行 `ariadne-suggest-adapters`，为当前 agent entry file 生成接入 `.codebase/router.md` 的建议。
-6. 确认后再次使用 `ariadne-apply-suggestion <suggestion-id>` 应用 adapter 建议。
+2. `ariadne-suggest-init` 会在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack，不需要再运行 `ariadne-apply-suggestion`。
+3. 运行 `ariadne-check-pack` 检查 `.codebase/` 是否完整。
+4. 运行 `ariadne-suggest-adapters`，为当前 agent entry file 生成接入 `.codebase/router.md` 的建议。
+5. review adapter suggestion。
+6. 确认后使用 `ariadne-apply-suggestion <suggestion-id>` 应用 adapter 建议。
 
 日常 coding 前：
 
@@ -48,7 +48,7 @@ scripts/install.sh gemini
 
 ## 常用 skills
 
-- `ariadne-suggest-init`：为新项目生成 `.codebase/` bootstrap suggestion。
+- `ariadne-suggest-init`：在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack。
 - `ariadne-apply-suggestion`：应用已经 review 的 suggestion。
 - `ariadne-check-pack`：只读检查 `.codebase/` 结构和契约是否完整。
 - `ariadne-check-adapters`：检查 agent entry file 是否接入 `.codebase/router.md`。
@@ -64,10 +64,10 @@ scripts/install.sh gemini
 Ariadne 使用 `check / suggest / apply` 三段式模型：
 
 - `check` 只读，不写文件。
-- `suggest` 只生成可 review 的建议，默认写入 `.codebase/meta/suggestions/`。
+- 除初始 bootstrap 外，`suggest` 只生成可 review 的建议，默认写入 `.codebase/meta/suggestions/`。
 - `apply` 只应用用户明确选择的 suggestion。
 
-因此，`suggest` 不会直接修改 Runtime Docs 或 agent entry files；真正写入文件必须经过 `ariadne-apply-suggestion`。
+`ariadne-suggest-init` 是唯一 direct-write 例外：当项目没有 `.codebase/` 时，它可以直接创建初始 Runtime Docs 和 manifest。已有 `.codebase/` 的 recovery、refresh、rules、recipes、adapter 等后续增量变更仍必须先 review suggestion，再通过 `ariadne-apply-suggestion` 应用。
 
 ## 语言策略
 

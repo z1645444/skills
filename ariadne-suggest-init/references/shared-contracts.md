@@ -2,6 +2,8 @@
 
 This reference defines the v1 contracts used by `ariadne-suggest-init`. Human-facing generated content defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
 
+`ariadne-suggest-init` is a direct bootstrap capability when no `.codebase/` exists. It creates the initial pack immediately instead of producing an init suggestion for `ariadne-apply-suggestion`. Recovery, migration, refresh, adapter, rule, and recipe changes remain reviewable suggestions.
+
 ## Agent Scope
 
 Every Ariadne capability needs an explicit Agent Scope.
@@ -30,7 +32,7 @@ Handle existing pack state as follows:
 
 ```text
 No .codebase/
-  -> generate Bootstrap Suggestion Bundle
+  -> directly create initial Codebase Knowledge Pack
 
 .codebase/ exists with compatible manifest
   -> stop init and recommend ariadne-suggest-refresh
@@ -47,7 +49,7 @@ Multiple .codebase-* variants exist
 
 ## Bootstrap Source Minimum
 
-Inspect these source classes before proposing an initial pack:
+Inspect these source classes before creating an initial pack:
 
 - Project identity: `package.json`, lockfile, TypeScript/build config.
 - Routing/page entries: routes, pages/views/modules, menu config.
@@ -58,31 +60,67 @@ Inspect these source classes before proposing an initial pack:
 
 If evidence is weak, lower confidence or produce candidates. Do not generate a full-trust pack from blind inference.
 
-## Suggestion Schema
+## Direct Bootstrap Output
 
-v1 suggestion JSON must include the apply-required fields:
+For the no-existing-pack bootstrap path, do not create `init-*.json` or require `ariadne-apply-suggestion`.
+
+Create the complete Practical Core pack directly:
+
+```text
+.codebase/
+  router.md
+  knowledge/
+    overview.md
+    framework-usage.md
+    ui-patterns.md
+    module-granularity.md
+  rules/
+    ui.md
+    framework-api.md
+    file-structure.md
+  examples/
+    page-types/
+  meta/
+    manifest.json
+    evidence/
+    suggestions/
+    candidates/
+    change-log.md
+```
+
+The final user-facing summary must include:
+
+- created files
+- skipped or candidate-only areas
+- framework, UI, module granularity, and Page Recipe confidence
+- recommended next checks, especially `ariadne-check-pack`
+- optional adapter next step: `ariadne-suggest-adapters`
+
+## Suggestion Schema For Non-Bootstrap Paths
+
+Pack Recovery, migration-needed, refresh, adapter, rule, and recipe suggestions still use `ariadne-apply-suggestion`. v1 suggestion JSON must include the apply-required fields:
 
 ```json
 {
   "schemaVersion": "1.0.0",
-  "id": "init-20260610-001",
-  "type": "bootstrap-pack",
+  "id": "refresh-20260610-001",
+  "type": "refresh-pack",
   "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "ariadne-suggest-init",
+  "createdBy": "ariadne-suggest-refresh",
   "agentScope": ["codex"],
   "risk": "medium",
   "sourceFingerprints": {},
   "targetPreconditions": [],
   "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/init-20260610-001.md"
+  "reviewSummaryPath": ".codebase/meta/suggestions/refresh-20260610-001.md"
 }
 ```
 
 Keep detailed confidence, evidence, and diff metadata in `metadata`, Evidence Artifacts, or the Markdown review summary instead of required schema fields.
 
-## Operations
+## Suggestion Operations
 
-v1 supports only these operation actions:
+For non-bootstrap suggestions, v1 supports only these operation actions:
 
 ```json
 {
@@ -200,9 +238,9 @@ Recommended bootstrap ownership:
   generated or reviewed-candidate metadata as appropriate
 ```
 
-## Review Summary
+## Review Summary For Suggestions
 
-Every suggestion JSON needs a Markdown review summary with:
+Every non-bootstrap suggestion JSON needs a Markdown review summary with:
 
 - suggestion id
 - target Agent Scope
