@@ -34,11 +34,13 @@ Before producing a refresh suggestion:
 
 1. Pack must pass structural readiness equivalent to `ariadne-check-pack`.
 2. Manifest schema major version must be supported.
-3. Manifest `sources` must be readable.
+3. Manifest `sources` must be readable, and every present source entry must expose a `fingerprint`.
 4. Manifest `files` ownership map must be readable.
 5. At least one source class must be stale or explicitly requested for refresh.
 
 If no sources are stale, report that no refresh suggestion is needed.
+
+Use `sources.<key>.fingerprint` as the manifest fingerprint. If an older manifest stores `sources.<key>` as a direct string hash, treat it as a legacy shape with a warning and include a manifest normalization operation in the refresh suggestion when appropriate. If a present source entry lacks a fingerprint, block refresh and recommend `ariadne-check-pack`.
 
 ## Source Classes
 

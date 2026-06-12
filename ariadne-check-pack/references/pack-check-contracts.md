@@ -97,7 +97,13 @@ Report agent-specific pack variants as errors. Do not remove or merge them.
   "packVersion": "2026-06-10T00:00:00Z",
   "generatedBy": "ariadne-suggest-init",
   "agentScope": ["codex"],
-  "sources": {},
+  "sources": {
+    "projectIdentity": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/project-identity.json",
+      "inputs": ["package.json"]
+    }
+  },
   "files": {}
 }
 ```
@@ -112,6 +118,27 @@ Required fields:
 - `files`
 
 v1 supports schema major version `1` only. Unknown major versions are errors.
+
+`packVersion` should be an ISO-8601 timestamp string. A numeric pack version is a warning because later freshness and refresh tooling expects a timestamp-like pack generation id.
+
+`sources` must be an object. Every present source entry must include:
+
+- `fingerprint`: string beginning with `sha256:`
+- `evidencePath`: optional path to the corresponding Evidence Artifact
+- `inputs`: optional list of source files or globs used for the fingerprint
+
+Source entries that exist without `fingerprint` are errors because freshness and refresh cannot compare them. Expected source keys may be absent when bootstrap evidence was weak; report missing important keys as warnings, not as fresh.
+
+Stable source keys:
+
+```text
+projectIdentity
+frameworkAuthority
+projectUsage
+routingPageEntries
+uiStyleUsage
+moduleLayout
+```
 
 ## File Ownership Map
 

@@ -50,6 +50,7 @@ Before creating an initial pack, read `references/shared-contracts.md`. It defin
    - Prepare all Runtime Docs, Evidence Artifacts, manifest, candidates, and metadata before writing.
    - Create the complete Practical Core `.codebase/` structure in one bootstrap pass.
    - Write `.codebase/router.md`, `.codebase/knowledge/*`, `.codebase/rules/*`, `.codebase/meta/*`, and high-confidence `.codebase/examples/*` when evidence permits.
+   - Write `.codebase/meta/manifest.json` with the v1 Pack Manifest Schema: ISO-8601 string `packVersion`, top-level `generatedBy`, `agentScope`, canonical `sources` entries with `fingerprint`, and `files` ownership.
    - Do not create `init-*.json` or require `ariadne-apply-suggestion` for the first bootstrap.
    - Do not modify `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursor/`, or other agent entry files.
 
@@ -102,7 +103,10 @@ Stop instead of guessing when:
 Before finishing:
 
 - `.codebase/router.md` and `.codebase/meta/manifest.json` exist after bootstrap.
-- The manifest records file ownership and source fingerprints.
+- The manifest satisfies the same required fields checked by `ariadne-check-pack`.
+- The manifest records file ownership in `files`.
+- The manifest records freshness fingerprints in canonical `sources` entries.
+- Stable source keys use `projectIdentity`, `frameworkAuthority`, `projectUsage`, `routingPageEntries`, `uiStyleUsage`, and `moduleLayout`.
 - No init suggestion is required for first bootstrap.
 - Agent entry files were not modified.
 - Human-facing output is Simplified Chinese with technical proper nouns preserved.

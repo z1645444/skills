@@ -96,6 +96,75 @@ The final user-facing summary must include:
 - recommended next checks, especially `ariadne-check-pack`
 - optional adapter next step: `ariadne-suggest-adapters`
 
+## Pack Manifest Schema
+
+Initial bootstrap must write `.codebase/meta/manifest.json` using the same v1 contract that `ariadne-check-pack`, `ariadne-check-freshness`, and `ariadne-suggest-refresh` consume.
+
+Required top-level fields:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "packVersion": "2026-06-10T00:00:00Z",
+  "generatedBy": "ariadne-suggest-init",
+  "agentScope": ["codex"],
+  "sources": {
+    "projectIdentity": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/project-identity.json",
+      "inputs": ["package.json", "pnpm-lock.yaml", "tsconfig.json"]
+    },
+    "frameworkAuthority": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/framework-authority.json",
+      "inputs": ["package.json", "node_modules/<framework>/package.json"]
+    },
+    "projectUsage": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/project-usage.json",
+      "inputs": ["src/**/*.{ts,tsx,js,jsx}"]
+    },
+    "routingPageEntries": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/page-inventory.json",
+      "inputs": ["src/**/routes*", "src/**/pages/**", "src/**/views/**", "src/**/menu*"]
+    },
+    "uiStyleUsage": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/ui-usage.json",
+      "inputs": ["src/**/*.{css,less,scss,tsx,jsx}"]
+    },
+    "moduleLayout": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/module-granularity.json",
+      "inputs": ["src/**"]
+    }
+  },
+  "files": {}
+}
+```
+
+Rules:
+
+- `packVersion` must be an ISO-8601 timestamp string, not a number.
+- `generatedBy` must be the bootstrap capability name.
+- `sources` is the canonical freshness input for packs; `sourceFingerprints` is for suggestion JSON and must not be the primary pack field.
+- Every present `sources` entry must include a `fingerprint` string with `sha256:` prefix.
+- Every present `sources` entry should include `evidencePath` when an Evidence Artifact exists.
+- Omit a source key only when evidence is too weak to fingerprint reliably; mention omitted keys in the user-facing summary and candidates.
+- Use only the stable source keys below.
+
+Stable source keys:
+
+```text
+projectIdentity
+frameworkAuthority
+projectUsage
+routingPageEntries
+uiStyleUsage
+moduleLayout
+```
+
 ## Suggestion Schema For Non-Bootstrap Paths
 
 Pack Recovery, migration-needed, refresh, adapter, rule, and recipe suggestions still use `ariadne-apply-suggestion`. v1 suggestion JSON must include the apply-required fields:
@@ -165,7 +234,7 @@ Record file ownership in `.codebase/meta/manifest.json`.
     ".codebase/rules/ui.md": {
       "owner": "reviewed",
       "generatedBy": "ariadne-suggest-rules",
-      "sourceKeys": ["uiUsage"]
+      "sourceKeys": ["uiStyleUsage"]
     }
   }
 }

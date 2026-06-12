@@ -30,7 +30,7 @@ Before checking freshness, read `references/freshness-check-contracts.md`. It de
 
 3. Recompute current source fingerprints.
    - Recompute only source classes recorded in manifest unless the user explicitly requests a broader check.
-   - Use stable source class names: project identity, framework authority, project usage, routing/page entries, UI/style usage, module layout.
+   - Use the stable manifest source keys: `projectIdentity`, `frameworkAuthority`, `projectUsage`, `routingPageEntries`, `uiStyleUsage`, and `moduleLayout`.
    - If a required source fingerprint cannot be recomputed, report an error for that source class.
 
 4. Compare freshness.

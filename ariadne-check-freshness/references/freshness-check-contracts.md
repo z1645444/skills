@@ -42,17 +42,43 @@ Required for freshness:
 {
   "schemaVersion": "1.0.0",
   "sources": {
-    "projectIdentity": "sha256:...",
-    "frameworkAuthority": "sha256:...",
-    "projectUsage": "sha256:...",
-    "routingPageEntries": "sha256:...",
-    "uiStyleUsage": "sha256:...",
-    "moduleLayout": "sha256:..."
+    "projectIdentity": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/project-identity.json",
+      "inputs": ["package.json", "pnpm-lock.yaml", "tsconfig.json"]
+    },
+    "frameworkAuthority": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/framework-authority.json",
+      "inputs": ["package.json", "node_modules/<framework>/package.json"]
+    },
+    "projectUsage": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/project-usage.json",
+      "inputs": ["src/**/*.{ts,tsx,js,jsx}"]
+    },
+    "routingPageEntries": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/page-inventory.json",
+      "inputs": ["src/**/routes*", "src/**/pages/**", "src/**/views/**", "src/**/menu*"]
+    },
+    "uiStyleUsage": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/ui-usage.json",
+      "inputs": ["src/**/*.{css,less,scss,tsx,jsx}"]
+    },
+    "moduleLayout": {
+      "fingerprint": "sha256:...",
+      "evidencePath": ".codebase/meta/evidence/module-granularity.json",
+      "inputs": ["src/**"]
+    }
   }
 }
 ```
 
 Source keys may be absent when the pack was bootstrapped with weak evidence. Missing source keys should be reported as `missing` or `warning`, not silently treated as fresh.
+
+For each present source entry, read `sources.<key>.fingerprint` as the manifest fingerprint. If an older manifest stores `sources.<key>` directly as a string hash, treat it as a legacy shape: compare the hash but warn that the manifest should be refreshed to the structured `sources.<key>.fingerprint` form. If a present source entry has no fingerprint, report `error`.
 
 ## Source Classes
 
