@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ariadne Check Freshness"
+  short_description: "Check .codebase freshness"
+  default_prompt: "Use $ariadne-check-freshness to check whether .codebase knowledge is stale."

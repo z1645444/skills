@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ariadne Codebase Memory"
-  short_description: "Create repo memory for AI coding agents"
-  default_prompt: "Use $ariadne-codebase to refresh project session memory for Codex, Claude Code, and Gemini."

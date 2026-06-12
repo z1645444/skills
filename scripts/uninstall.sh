@@ -58,12 +58,14 @@ fi
 unique_platforms=()
 for platform in "${platforms[@]}"; do
   found=false
-  for existing in "${unique_platforms[@]}"; do
-    if [[ "$existing" == "$platform" ]]; then
-      found=true
-      break
-    fi
-  done
+  if [[ ${#unique_platforms[@]} -gt 0 ]]; then
+    for existing in "${unique_platforms[@]}"; do
+      if [[ "$existing" == "$platform" ]]; then
+        found=true
+        break
+      fi
+    done
+  fi
   if [[ "$found" == false ]]; then
     unique_platforms+=("$platform")
   fi

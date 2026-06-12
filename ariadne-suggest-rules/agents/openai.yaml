@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ariadne Suggest Rules"
+  short_description: "Plan coding rule candidates"
+  default_prompt: "Use $ariadne-suggest-rules to generate reviewable Coding Rule candidates."

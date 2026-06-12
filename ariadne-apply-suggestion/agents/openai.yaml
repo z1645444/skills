@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ariadne Apply Suggestion"
+  short_description: "Safely apply Ariadne suggestions"
+  default_prompt: "Use $ariadne-apply-suggestion to apply a reviewed Ariadne suggestion safely."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ariadne Suggest Init"
+  short_description: "Bootstrap .codebase suggestions"
+  default_prompt: "Use $ariadne-suggest-init to generate a reviewable .codebase bootstrap suggestion."
