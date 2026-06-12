@@ -26,8 +26,8 @@ scripts/install.sh gemini
 
 首次在某个项目中使用：
 
-1. 运行 `ariadne-suggest-init`。
-2. `ariadne-suggest-init` 会在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack，不需要再运行 `ariadne-apply-suggestion`。
+1. 运行 `ariadne-init`。
+2. `ariadne-init` 会在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack，不需要再运行 `ariadne-apply-suggestion`。
 3. 运行 `ariadne-check-pack` 检查 `.codebase/` 是否完整。
 4. 运行 `ariadne-suggest-adapters`，为当前 agent entry file 生成接入 `.codebase/router.md` 的建议。
 5. review adapter suggestion。
@@ -48,7 +48,7 @@ scripts/install.sh gemini
 
 ## 常用 skills
 
-- `ariadne-suggest-init`：在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack。
+- `ariadne-init`：在没有 `.codebase/` 时直接创建初始 Codebase Knowledge Pack。
 - `ariadne-apply-suggestion`：应用已经 review 的 suggestion。
 - `ariadne-check-pack`：只读检查 `.codebase/` 结构和契约是否完整。
 - `ariadne-check-adapters`：检查 agent entry file 是否接入 `.codebase/router.md`。
@@ -67,7 +67,7 @@ Ariadne 使用 `check / suggest / apply` 三段式模型：
 - 除初始 bootstrap 外，`suggest` 只生成可 review 的建议，默认写入 `.codebase/meta/suggestions/`。
 - `apply` 只应用用户明确选择的 suggestion。
 
-`ariadne-suggest-init` 是唯一 direct-write 例外：当项目没有 `.codebase/` 时，它可以直接创建初始 Runtime Docs 和 manifest。已有 `.codebase/` 的 recovery、refresh、rules、recipes、adapter 等后续增量变更仍必须先 review suggestion，再通过 `ariadne-apply-suggestion` 应用。
+`ariadne-init` 是唯一 direct-write 例外：当项目没有 `.codebase/` 时，它可以直接创建初始 Runtime Docs 和 manifest。已有 `.codebase/` 的 recovery、refresh、rules、recipes、adapter 等后续增量变更仍必须先 review suggestion，再通过 `ariadne-apply-suggestion` 应用。
 
 ## 语言策略
 
@@ -83,7 +83,7 @@ Ariadne 面向人的输出默认使用简体中文。
 - identifier
 - agent/tool name
 
-例如：`.codebase/router.md`、`Task Router`、`Codebase Knowledge Pack`、`Agent Adapter`、`ariadne-suggest-init` 都保持原文。
+例如：`.codebase/router.md`、`Task Router`、`Codebase Knowledge Pack`、`Agent Adapter`、`ariadne-init` 都保持原文。
 
 ## 关键约束
 

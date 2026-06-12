@@ -1,6 +1,6 @@
 ---
 name: ariadne-apply-suggestion
-description: Safely apply an explicit Ariadne Suggestion from `.codebase/meta/suggestions/` by parsing the v1 Suggestion Schema, running Apply Guard, and executing the bundle only when source fingerprints, target preconditions, file ownership, schema compatibility, and Agent Scope all match. Use after reviewing a suggestion produced by `ariadne-suggest-init`, `ariadne-suggest-refresh`, `ariadne-suggest-adapters`, `ariadne-suggest-recipes`, or `ariadne-suggest-rules`.
+description: Safely apply an explicit Ariadne Suggestion from `.codebase/meta/suggestions/` by parsing the v1 Suggestion Schema, running Apply Guard, and executing the bundle only when source fingerprints, target preconditions, file ownership, schema compatibility, and Agent Scope all match. Use after reviewing a suggestion produced by `ariadne-suggest-refresh`, `ariadne-suggest-adapters`, `ariadne-suggest-recipes`, or `ariadne-suggest-rules`; initial bootstrap uses `ariadne-init` directly and does not produce an applicable init suggestion.
 ---
 
 # Ariadne Apply Suggestion

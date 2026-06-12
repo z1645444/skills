@@ -24,7 +24,7 @@ Before creating an adapter suggestion, read `references/adapter-suggestion-contr
 
 2. Verify pack entry.
    - `.codebase/router.md` must exist before suggesting adapter patches.
-   - If router is missing, stop and recommend `ariadne-suggest-init` or `ariadne-check-pack`.
+   - If router is missing, stop and recommend `ariadne-init` or `ariadne-check-pack`.
    - Read `.codebase/meta/manifest.json` if present to include pack context, but do not require full freshness analysis.
 
 3. Select target agents.

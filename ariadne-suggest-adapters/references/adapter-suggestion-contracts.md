@@ -67,7 +67,7 @@ Do not create capability names like `ariadne-suggest-codex-adapter`.
 If missing:
 
 ```text
-recommend ariadne-suggest-init or ariadne-check-pack
+recommend ariadne-init or ariadne-check-pack
 do not create adapter suggestion
 ```
 

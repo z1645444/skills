@@ -1,9 +1,9 @@
 ---
-name: ariadne-suggest-init
+name: ariadne-init
 description: Directly create the initial agent-neutral `.codebase/` Codebase Knowledge Pack when no pack exists. Use when a management-system frontend project needs first-time `.codebase/` setup, Task Router bootstrap, manifest/evidence scaffolding, and framework/UI/module-granularity observed knowledge; existing packs, recovery, refresh, rules, recipes, and adapter changes still use reviewable suggestions.
 ---
 
-# Ariadne Suggest Init
+# Ariadne Init
 
 ## Overview
 

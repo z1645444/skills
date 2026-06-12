@@ -95,7 +95,7 @@ Report agent-specific pack variants as errors. Do not remove or merge them.
 {
   "schemaVersion": "1.0.0",
   "packVersion": "2026-06-10T00:00:00Z",
-  "generatedBy": "ariadne-suggest-init",
+  "generatedBy": "ariadne-init",
   "agentScope": ["codex"],
   "sources": {
     "projectIdentity": {
@@ -120,6 +120,8 @@ Required fields:
 v1 supports schema major version `1` only. Unknown major versions are errors.
 
 `packVersion` should be an ISO-8601 timestamp string. A numeric pack version is a warning because later freshness and refresh tooling expects a timestamp-like pack generation id.
+
+`generatedBy` should be `ariadne-init` for newly bootstrapped packs. Existing packs that still record the legacy value `ariadne-suggest-init` are compatible v1 packs; report the legacy value as a warning or provenance note, not an error.
 
 `sources` must be an object. Every present source entry must include:
 
@@ -194,7 +196,7 @@ Recommended next command examples:
 
 ```text
 Missing pack
-  -> ariadne-suggest-init
+  -> ariadne-init
 
 Pack valid but stale not checked
   -> ariadne-check-freshness
@@ -224,7 +226,7 @@ When `--json` is requested, output a stable structure:
       "message": "Router is missing."
     }
   ],
-  "recommended": ["ariadne-suggest-init"]
+  "recommended": ["ariadne-init"]
 }
 ```
 

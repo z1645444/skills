@@ -1,8 +1,8 @@
 # Ariadne Shared Contracts
 
-This reference defines the v1 contracts used by `ariadne-suggest-init`. Human-facing generated content defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
+This reference defines the v1 contracts used by `ariadne-init`. Human-facing generated content defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
 
-`ariadne-suggest-init` is a direct bootstrap capability when no `.codebase/` exists. It creates the initial pack immediately instead of producing an init suggestion for `ariadne-apply-suggestion`. Recovery, migration, refresh, adapter, rule, and recipe changes remain reviewable suggestions.
+`ariadne-init` is a direct bootstrap capability when no `.codebase/` exists. It creates the initial pack immediately instead of producing an init suggestion for `ariadne-apply-suggestion`. Recovery, migration, refresh, adapter, rule, and recipe changes remain reviewable suggestions.
 
 ## Agent Scope
 
@@ -106,7 +106,7 @@ Required top-level fields:
 {
   "schemaVersion": "1.0.0",
   "packVersion": "2026-06-10T00:00:00Z",
-  "generatedBy": "ariadne-suggest-init",
+  "generatedBy": "ariadne-init",
   "agentScope": ["codex"],
   "sources": {
     "projectIdentity": {
@@ -147,7 +147,7 @@ Required top-level fields:
 Rules:
 
 - `packVersion` must be an ISO-8601 timestamp string, not a number.
-- `generatedBy` must be the bootstrap capability name.
+- `generatedBy` must be `ariadne-init` for new bootstrap output. Do not write the legacy name `ariadne-suggest-init` in newly generated packs.
 - `sources` is the canonical freshness input for packs; `sourceFingerprints` is for suggestion JSON and must not be the primary pack field.
 - Every present `sources` entry must include a `fingerprint` string with `sha256:` prefix.
 - Every present `sources` entry should include `evidencePath` when an Evidence Artifact exists.
@@ -228,7 +228,7 @@ Record file ownership in `.codebase/meta/manifest.json`.
   "files": {
     ".codebase/knowledge/framework-usage.md": {
       "owner": "generated",
-      "generatedBy": "ariadne-suggest-init",
+      "generatedBy": "ariadne-init",
       "sourceKeys": ["frameworkAuthority", "projectUsage"]
     },
     ".codebase/rules/ui.md": {

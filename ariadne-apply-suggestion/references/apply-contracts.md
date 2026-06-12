@@ -33,16 +33,16 @@ v1 suggestion JSON must include:
 ```json
 {
   "schemaVersion": "1.0.0",
-  "id": "init-20260610-001",
-  "type": "bootstrap-pack",
+  "id": "refresh-20260610-001",
+  "type": "refresh-pack",
   "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "ariadne-suggest-init",
+  "createdBy": "ariadne-suggest-refresh",
   "agentScope": ["codex"],
   "risk": "medium",
   "sourceFingerprints": {},
   "targetPreconditions": [],
   "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/init-20260610-001.md"
+  "reviewSummaryPath": ".codebase/meta/suggestions/refresh-20260610-001.md"
 }
 ```
 
@@ -59,7 +59,6 @@ Reject:
 v1 apply may support these types as they are implemented:
 
 ```text
-bootstrap-pack
 pack-recovery
 refresh-pack
 adapter-patch
