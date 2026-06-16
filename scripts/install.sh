@@ -9,7 +9,7 @@ usage() {
 }
 
 skill_dirs() {
-  find "$repo_root"/skills -mindepth 2 -maxdepth 2 -type f -name SKILL.md -print0 |
+  find "$repo_root"/skills -mindepth 2 -maxdepth 3 -type f -name SKILL.md -print0 |
     while IFS= read -r -d '' skill_file; do
       dirname "$skill_file"
     done
