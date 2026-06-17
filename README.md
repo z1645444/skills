@@ -53,7 +53,7 @@ Pagepack 是一组以 `pagepack-` 开头的可组合 skills，用于为 manageme
 - `pagepack-apply-suggestion`：应用已 review 的建议
 - `pagepack-explain`：解释 route、rule 或 suggestion 的来源
 
-快速开始见 [docs/ariadne-quickstart.md](docs/ariadne-quickstart.md)。
+快速开始见 [docs/pagepack-quickstart.md](docs/pagepack-quickstart.md)。
 
 ## 添加新 Skill
 
