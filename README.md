@@ -2,15 +2,6 @@
 
 个人 skill hub，为 Claude Code、Codex、Gemini CLI 和 Antigravity 提供可复用的 agent skills。
 
-## 目录结构
-
-```text
-skills/<group>/<skill-name>/
-  SKILL.md       # 必填，skill 定义，包含 YAML frontmatter
-  agents/        # 可选，agent 专属配置
-  references/    # 可选，合约、schema 或参考文档
-```
-
 ## 安装与卸载
 
 ```bash
@@ -64,3 +55,12 @@ Pagepack 是一组以 `pagepack-` 开头的可组合 skills，用于为 manageme
 5. 运行 `scripts/install.sh`。
 
 更多约定见 [CONTEXT.md](CONTEXT.md)。
+
+## 目录结构
+
+```text
+skills/<group>/<skill-name>/
+  SKILL.md       # 必填，skill 定义，包含 YAML frontmatter
+  agents/        # 可选，agent 专属配置
+  references/    # 可选，合约、schema 或参考文档
+```

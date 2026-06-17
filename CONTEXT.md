@@ -13,8 +13,8 @@ skills/<group>/<skill-name>/
 
 ## Skill Naming
 
-- Directory name equals the invocation name, e.g. `ariadne-init`.
-- Group directories collect related skills, e.g. `skills/ariadne/`.
+- Directory name equals the invocation name, e.g. `pagepack-init`.
+- Group directories collect related skills, e.g. `skills/pagepack/`.
 
 ## SKILL.md Format
 

@@ -34,5 +34,5 @@ scripts/uninstall.sh
 ## What Not to Do
 
 - Do not put implementation code or distribute binaries in this repository.
-- Do not rename existing ariadne skills; their names match agent invocation commands.
+- Do not rename existing pagepack skills; their names match agent invocation commands.
 - Do not commit secrets, credentials, or generated agent adapter files.
