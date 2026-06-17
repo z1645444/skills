@@ -1,22 +1,22 @@
 # Pagepack Adapter Suggestion Contracts
 
-This reference defines the v1 suggestion contract for Agent Adapter patches. Human-facing output defaults to Simplified Chinese; preserve file paths, command names, API names, agent names, framework names, component names, identifiers, and suggestion ids.
+This reference defines the contract for Agent Adapter patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, agent names, framework names, component names, identifiers, and other technical proper nouns.
 
 ## Scope
 
-`pagepack-suggest-adapters` plans adapter changes. It may write suggestion JSON/MD under `.codebase/meta/suggestions/`, but it must not directly modify agent entry files.
+`pagepack-suggest-adapters` produces directly applicable patches for agent entry files. It does not write suggestion bundles under `.codebase/` and does not directly modify agent entry files.
 
 It reads:
 
 - adapter registry;
 - `.codebase/router.md`;
-- `.codebase/meta/manifest.json` when present;
 - target agent entry files.
 
-It writes:
+It outputs:
 
-- `.codebase/meta/suggestions/adapter-*.json`;
-- `.codebase/meta/suggestions/adapter-*.md`.
+- unified diff patch blocks for `AGENTS.md` and/or `CLAUDE.md`;
+- optional `baseHash` for existing files;
+- a concise human-facing summary.
 
 ## Agent Scope
 
@@ -36,7 +36,7 @@ unknown current agent without --agent/--all
   -> stop and ask for explicit scope
 ```
 
-Do not infer current agent from the mere presence of `AGENTS.md`, `CLAUDE.md`, or other entry files.
+Do not infer current agent from the mere presence of `AGENTS.md` or `CLAUDE.md`.
 
 ## V1 Adapter Registry
 
@@ -46,16 +46,6 @@ codex
 
 claude
   CLAUDE.md
-
-gemini
-  GEMINI.md
-
-cursor
-  .cursor/rules/*.md
-  .cursorrules
-
-antigravity
-  registry entry required; if unknown, report unsupported mapping
 ```
 
 Do not create capability names like `pagepack-suggest-codex-adapter`.
@@ -67,7 +57,7 @@ Do not create capability names like `pagepack-suggest-codex-adapter`.
 If missing:
 
 ```text
-recommend pagepack-init or pagepack-check-pack
+recommend pagepack-init
 do not create adapter suggestion
 ```
 
@@ -95,44 +85,47 @@ Do not include:
 - module granularity rules;
 - copied `.codebase/` sections.
 
-## Suggestion Schema
+## Patch Output Format
 
-Adapter suggestions use the standard v1 schema:
+The skill outputs a unified diff for each target entry file. For a missing file, the patch represents a `create` operation. For an existing file, it represents a `patch` operation.
 
-```json
-{
-  "schemaVersion": "1.0.0",
-  "id": "adapter-20260610-001",
-  "type": "adapter-patch",
-  "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "pagepack-suggest-adapters",
-  "agentScope": ["codex"],
-  "risk": "low",
-  "sourceFingerprints": {
-    ".codebase/router.md": "sha256:..."
-  },
-  "targetPreconditions": [],
-  "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/adapter-20260610-001.md"
-}
+Example for a missing `CLAUDE.md`:
+
+```diff
+--- /dev/null
++++ CLAUDE.md
+@@ -0,0 +1,3 @@
++# Project Context
++
++Before coding, read `.codebase/router.md` and follow the task route for the current request. Load only the Runtime Docs required by that route unless broader context is necessary.
 ```
 
-Allowed operation actions:
+Example for an existing `AGENTS.md`:
 
-- `create`;
-- `patch`.
+```diff
+--- AGENTS.md
++++ AGENTS.md
+@@ -1,5 +1,8 @@
+ # Agent Instructions
 
-Avoid `replace` for agent entry files because they are human/agent maintained.
++Before coding, read `.codebase/router.md` and follow the task route for the current request. Load only the Runtime Docs required by that route unless broader context is necessary.
++
+ ## Coding Style
+
+ ...
+```
+
+For existing files, include an optional `baseHash` so `pagepack-apply-suggestion` can guard against stale application.
 
 ## Operation Guidance
 
-Use `create` when:
+Use `create` semantics when:
 
 - expected entry file is missing;
 - target path is unambiguous;
 - parent directory can be created safely by apply.
 
-Use `patch` when:
+Use `patch` semantics when:
 
 - entry file exists;
 - `baseHash` can be recorded;
@@ -140,49 +133,23 @@ Use `patch` when:
 
 Block or mark review-needed when:
 
-- multiple possible Cursor rule files exist and no target is obvious;
+- multiple possible rule files exist and no target is obvious;
 - entry file has complex conflicting instructions;
 - patch insertion point is unsafe;
 - file contains large duplicated project rules that require manual cleanup.
 
-## Target Preconditions
+## Trailing Prompt Guidance
 
-For `create`:
+Trailing text narrows the adapter patch. Examples:
 
-```json
-{
-  "path": "AGENTS.md",
-  "condition": "must_not_exist"
-}
-```
+- `pagepack-suggest-adapters use relative path for monorepo`
+- `pagepack-suggest-adapters add note about SSR`
 
-For `patch`:
-
-```json
-{
-  "path": "AGENTS.md",
-  "condition": "hash_equals",
-  "hash": "sha256:..."
-}
-```
-
-Apply must block when target state changes before application.
-
-## Review Summary
-
-Markdown review summary should include:
-
-- suggestion id;
-- target Agent Scope;
-- target entry files;
-- whether each operation is `create` or `patch`;
-- warnings for drift risk or copied rules;
-- exact Adapter Boot Instruction to be inserted;
-- apply instruction: `pagepack-apply-suggestion <id>`.
+The patch must still be concrete and directly applicable.
 
 ## Drift Risk Handling
 
-If an existing entry file copies Runtime Docs, report drift risk in the summary. The suggestion may still add or fix router boot instruction, but it should not silently remove large duplicated sections in v1.
+If an existing entry file copies Runtime Docs, report drift risk in the summary. The patch may still add or fix router boot instruction, but it should not silently remove large duplicated sections in v1.
 
 Manual cleanup can be recommended separately.
 

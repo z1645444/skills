@@ -1,15 +1,17 @@
 # Pagepack Shared Contracts
 
-This reference defines the v1 contracts used by `pagepack-init`. Human-facing generated content defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
+This reference defines the contracts used by `pagepack-init`. Human-facing generated content uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
 
-`pagepack-init` is a direct bootstrap capability when no `.codebase/` exists. It creates the initial pack immediately instead of producing an init suggestion for `pagepack-apply-suggestion`. Recovery, migration, refresh, adapter, rule, and recipe changes remain reviewable suggestions.
+`pagepack-init` is a direct bootstrap capability when no `.codebase/` exists. It creates Runtime Docs immediately and does not produce intermediate artifacts such as a manifest, evidence files, suggestion bundles, or candidate files.
+
+`.codebase/` is local output and should normally be gitignored.
 
 ## Agent Scope
 
 Every Pagepack capability needs an explicit Agent Scope.
 
 - Default to the current agent only when it is reliably known.
-- Use `--agent <codex|claude|gemini|cursor|antigravity>` for a specific agent.
+- Use `--agent <codex|claude>` for a specific agent.
 - Use `--all` only to expand agent compatibility or adapter scope.
 - If current agent is unknown and no explicit scope is provided, stop and ask for scope.
 - Agent Scope must not create agent-specific `.codebase-*` variants.
@@ -23,7 +25,6 @@ Do not create:
 ```text
 .codebase-codex/
 .codebase-claude/
-.codebase-cursor/
 ```
 
 ## Bootstrap State Rules
@@ -34,17 +35,8 @@ Handle existing pack state as follows:
 No .codebase/
   -> directly create initial Codebase Knowledge Pack
 
-.codebase/ exists with compatible manifest
-  -> stop init and recommend pagepack-suggest-refresh
-
-.codebase/ exists without manifest
-  -> generate Pack Recovery suggestion
-
-.codebase/ exists with incompatible schema major
-  -> stop normal init and generate migration-needed report or suggestion
-
-Multiple .codebase-* variants exist
-  -> report Single Pack Invariant violation; do not merge automatically
+.codebase/ exists
+  -> stop init and recommend reviewing or regenerating manually
 ```
 
 ## Bootstrap Source Minimum
@@ -58,13 +50,11 @@ Inspect these source classes before creating an initial pack:
 - UI/style usage: UI components, wrapper components, stylesheets, `className`, inline styles.
 - Module granularity: file tree, services, hooks, constants, schemas, types.
 
-If evidence is weak, lower confidence or produce candidates. Do not generate a full-trust pack from blind inference.
+If evidence is weak, lower confidence in the generated Runtime Docs. Do not generate a full-trust pack from blind inference.
 
 ## Direct Bootstrap Output
 
-For the no-existing-pack bootstrap path, do not create `init-*.json` or require `pagepack-apply-suggestion`.
-
-Create the complete Practical Core pack directly:
+For the no-existing-pack bootstrap path, create the complete Practical Core pack directly:
 
 ```text
 .codebase/
@@ -80,175 +70,25 @@ Create the complete Practical Core pack directly:
     file-structure.md
   examples/
     page-types/
-  meta/
-    manifest.json
-    evidence/
-    suggestions/
-    candidates/
-    change-log.md
+```
+
+Do not create:
+
+```text
+.codebase/meta/
+.codebase/meta/manifest.json
+.codebase/meta/evidence/
+.codebase/meta/suggestions/
+.codebase/meta/candidates/
+.codebase/meta/change-log.md
 ```
 
 The final user-facing summary must include:
 
 - created files
-- skipped or candidate-only areas
+- skipped or low-confidence areas
 - framework, UI, module granularity, and Page Recipe confidence
-- recommended next checks, especially `pagepack-check-pack`
-- optional adapter next step: `pagepack-suggest-adapters`
-
-## Pack Manifest Schema
-
-Initial bootstrap must write `.codebase/meta/manifest.json` using the same v1 contract that `pagepack-check-pack`, `pagepack-check-freshness`, and `pagepack-suggest-refresh` consume.
-
-Required top-level fields:
-
-```json
-{
-  "schemaVersion": "1.0.0",
-  "packVersion": "2026-06-10T00:00:00Z",
-  "generatedBy": "pagepack-init",
-  "agentScope": ["codex"],
-  "sources": {
-    "projectIdentity": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/project-identity.json",
-      "inputs": ["package.json", "pnpm-lock.yaml", "tsconfig.json"]
-    },
-    "frameworkAuthority": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/framework-authority.json",
-      "inputs": ["package.json", "node_modules/<framework>/package.json"]
-    },
-    "projectUsage": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/project-usage.json",
-      "inputs": ["src/**/*.{ts,tsx,js,jsx}"]
-    },
-    "routingPageEntries": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/page-inventory.json",
-      "inputs": ["src/**/routes*", "src/**/pages/**", "src/**/views/**", "src/**/menu*"]
-    },
-    "uiStyleUsage": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/ui-usage.json",
-      "inputs": ["src/**/*.{css,less,scss,tsx,jsx}"]
-    },
-    "moduleLayout": {
-      "fingerprint": "sha256:...",
-      "evidencePath": ".codebase/meta/evidence/module-granularity.json",
-      "inputs": ["src/**"]
-    }
-  },
-  "files": {}
-}
-```
-
-Rules:
-
-- `packVersion` must be an ISO-8601 timestamp string, not a number.
-- `generatedBy` must be `pagepack-init` for new bootstrap output. Do not write the legacy name `pagepack-suggest-init` in newly generated packs.
-- `sources` is the canonical freshness input for packs; `sourceFingerprints` is for suggestion JSON and must not be the primary pack field.
-- Every present `sources` entry must include a `fingerprint` string with `sha256:` prefix.
-- Every present `sources` entry should include `evidencePath` when an Evidence Artifact exists.
-- Omit a source key only when evidence is too weak to fingerprint reliably; mention omitted keys in the user-facing summary and candidates.
-- Use only the stable source keys below.
-
-Stable source keys:
-
-```text
-projectIdentity
-frameworkAuthority
-projectUsage
-routingPageEntries
-uiStyleUsage
-moduleLayout
-```
-
-## Suggestion Schema For Non-Bootstrap Paths
-
-Pack Recovery, migration-needed, refresh, adapter, rule, and recipe suggestions still use `pagepack-apply-suggestion`. v1 suggestion JSON must include the apply-required fields:
-
-```json
-{
-  "schemaVersion": "1.0.0",
-  "id": "refresh-20260610-001",
-  "type": "refresh-pack",
-  "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "pagepack-suggest-refresh",
-  "agentScope": ["codex"],
-  "risk": "medium",
-  "sourceFingerprints": {},
-  "targetPreconditions": [],
-  "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/refresh-20260610-001.md"
-}
-```
-
-Keep detailed confidence, evidence, and diff metadata in `metadata`, Evidence Artifacts, or the Markdown review summary instead of required schema fields.
-
-## Suggestion Operations
-
-For non-bootstrap suggestions, v1 supports only these operation actions:
-
-```json
-{
-  "action": "create",
-  "path": ".codebase/router.md",
-  "content": "..."
-}
-```
-
-```json
-{
-  "action": "replace",
-  "path": ".codebase/knowledge/ui-patterns.md",
-  "baseHash": "sha256:...",
-  "content": "..."
-}
-```
-
-```json
-{
-  "action": "patch",
-  "path": "AGENTS.md",
-  "baseHash": "sha256:...",
-  "patch": "unified diff..."
-}
-```
-
-Do not include delete, move, chmod, shell commands, or hidden side effects.
-
-## File Ownership
-
-Record file ownership in `.codebase/meta/manifest.json`.
-
-```json
-{
-  "files": {
-    ".codebase/knowledge/framework-usage.md": {
-      "owner": "generated",
-      "generatedBy": "pagepack-init",
-      "sourceKeys": ["frameworkAuthority", "projectUsage"]
-    },
-    ".codebase/rules/ui.md": {
-      "owner": "reviewed",
-      "generatedBy": "pagepack-suggest-rules",
-      "sourceKeys": ["uiStyleUsage"]
-    }
-  }
-}
-```
-
-Rules:
-
-- `generated` may be replaced with `baseHash` guard.
-- `reviewed` requires patch or explicit review.
-- `manual` requires patch or user editing.
-- `unknown` blocks replace.
-- v1 supports file-level ownership only.
-
-Runtime `rules/*.md` are `reviewed` by default because they express expected behavior, not regenerated facts.
+- recommended next command: `pagepack-suggest-adapters`
 
 ## Practical Core Routes
 
@@ -261,7 +101,7 @@ Generate `.codebase/router.md` from stable route types:
 - New Page/Module
 - Style/CSS Change
 
-Fill links dynamically based on available Runtime Docs and candidates. Do not invent project-specific route categories during v1 bootstrap.
+Fill links dynamically based on available Runtime Docs. Do not invent project-specific route categories during bootstrap.
 
 ## UI Decision Ladder
 
@@ -281,40 +121,31 @@ Custom style must stay local, avoid duplicating design-system behavior, and not 
 Use Framework Authority to validate API existence and Project Usage to identify project defaults.
 
 - Confirmed API + high project usage -> Runtime Docs candidate.
-- Missing authority + project import pattern -> Framework Detection Candidate.
-- Deprecated API -> Framework Candidate or migration suggestion, not automatic Runtime Rule.
+- Missing authority + project import pattern -> uncertainty, not confirmed guidance.
+- Deprecated API -> note as risk, not automatic Runtime Rule.
 - Project wrapper is preferred when it is the common project path.
 - Do not infer complex prop semantics unless backed by clear docs or repeated safe usage.
 
 ## Runtime Docs Ownership Defaults
 
-Recommended bootstrap ownership:
+Recommended bootstrap ownership intent:
 
 ```text
+.codebase/router.md
+  maintained by Pagepack init/suggest refresh (now direct rewrite)
+
 .codebase/knowledge/*.md
-  generated
+  maintained by Pagepack init/suggest refresh (now direct rewrite)
 
 .codebase/rules/*.md
-  reviewed
+  reviewed guidance; Pagepack suggest-rules proposes patches
 
 .codebase/examples/page-types/*.md
-  generated only when high confidence; otherwise candidate
-
-.codebase/meta/evidence/*.json
-  generated
-
-.codebase/meta/candidates/*.md
-  generated or reviewed-candidate metadata as appropriate
+  generated when high confidence; otherwise left out of initial bootstrap
 ```
 
-## Review Summary For Suggestions
+There is no persistent ownership map; keep this intent in mind when proposing patches.
 
-Every non-bootstrap suggestion JSON needs a Markdown review summary with:
+## Language Policy
 
-- suggestion id
-- target Agent Scope
-- proposed files
-- confidence summary
-- risks and conflicts
-- candidates requiring review
-- apply instruction: `pagepack-apply-suggestion <id>`
+Pagepack generated content uses the user's preferred language, defaulting to English. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns in their original form.

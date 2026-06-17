@@ -1,4 +1,4 @@
 interface:
   display_name: "Pagepack Init"
-  short_description: "Create initial .codebase pack"
-  default_prompt: "Use $pagepack-init to directly create the initial .codebase Codebase Knowledge Pack when no pack exists."
+  short_description: "Create initial .codebase Runtime Docs"
+  default_prompt: "Use $pagepack-init to directly create the initial .codebase Runtime Docs when no .codebase/ exists."

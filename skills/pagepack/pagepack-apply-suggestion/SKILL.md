@@ -1,19 +1,19 @@
 ---
 name: pagepack-apply-suggestion
-description: Safely apply an explicit Pagepack Suggestion from `.codebase/meta/suggestions/` by parsing the v1 Suggestion Schema, running Apply Guard, and executing the bundle only when source fingerprints, target preconditions, file ownership, schema compatibility, and Agent Scope all match. Use after reviewing a suggestion produced by `pagepack-suggest-refresh`, `pagepack-suggest-adapters`, `pagepack-suggest-recipes`, or `pagepack-suggest-rules`; initial bootstrap uses `pagepack-init` directly and does not produce an applicable init suggestion.
+description: Apply a reviewed unified diff patch safely. Checks file existence and optional baseHash, then applies the patch. No manifest or ownership lookups.
 ---
 
 # Pagepack Apply Suggestion
 
 ## Overview
 
-Use this skill to apply a reviewed Pagepack Suggestion safely. It must never infer missing intent, regenerate project knowledge, or best-effort apply a partial bundle.
+Use this skill to apply a reviewed patch safely. It accepts a unified diff (inline or referenced), runs a minimal guard, and applies the patch. It does not read a manifest, ownership map, or persisted suggestion bundles.
 
-Generated human-facing output must use Simplified Chinese by default. Preserve file paths, command names, API names, framework names, identifiers, component names, suggestion ids, and other technical proper nouns.
+Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns.
 
 ## Required Reference
 
-Before applying or evaluating a suggestion, read `references/apply-contracts.md`. It defines Apply Guard, supported operations, target preconditions, ownership checks, and failure behavior.
+Before applying, read `references/apply-contracts.md`. It defines the simplified input format, guard rules, and failure behavior.
 
 ## Workflow
 
@@ -22,76 +22,78 @@ Before applying or evaluating a suggestion, read `references/apply-contracts.md`
    - If unknown, stop and ask the user for `--agent` or `--all`.
    - Do not fall back to generic/manual mode.
 
-2. Locate the suggestion.
-   - Accept an explicit suggestion id or path.
-   - Prefer `.codebase/meta/suggestions/<id>.json`.
-   - Read the companion Markdown review summary when present.
-   - If the suggestion is missing, stop.
+2. Accept the patch.
+   - Accept an explicit unified diff block from the user.
+   - Optionally accept a `baseHash` for the target file.
+   - Do not locate or parse persisted suggestion JSON/MD bundles.
 
-3. Parse Suggestion Schema.
-   - Verify `schemaVersion`, `id`, `type`, `createdBy`, `agentScope`, `sourceFingerprints`, `targetPreconditions`, `operations`, and `reviewSummaryPath`.
-   - Reject unsupported schema major versions, unsupported suggestion types, and unsupported operation actions.
-   - v1 supports only `create`, `replace`, and `patch`.
-
-4. Run Apply Guard before writing anything.
-   - Verify current Agent Scope is allowed by the suggestion.
-   - Recompute source fingerprints and compare with the suggestion.
-   - Check all target preconditions.
-   - Check `baseHash` for `replace` and `patch` operations.
-   - Check File Ownership for `replace` operations.
+3. Run Apply Guard before writing anything.
+   - Verify target file existence matches the patch expectation (existing for `patch`, absent for `create`).
+   - If `baseHash` is provided, compute the current file hash and compare.
    - If any guard fails, report the blocking reason and write nothing.
 
-5. Execute Bundle Apply.
-   - Apply all operations as one logical bundle only after all guard checks pass.
-   - Do not skip failed operations and continue.
-   - If a write fails, stop and report the partial state clearly. Prefer preventing partial state through preflight checks before writing.
-   - Do not execute delete, move, chmod, shell commands, or hidden side effects.
+4. Apply the patch.
+   - Apply the unified diff to the target file.
+   - If the patch does not apply cleanly, stop and report failure.
 
-6. Report result.
-   - Summarize applied operations.
-   - Include changed files.
-   - If blocked, state which guard failed and recommend rerunning the relevant `pagepack-suggest-*` capability.
+5. Report result.
+   - Summarize applied files.
+   - If blocked, state which guard failed and recommend regenerating the patch.
+
+## Input Format
+
+A unified diff block:
+
+```diff
+--- AGENTS.md
++++ AGENTS.md
+@@ -1,5 +1,8 @@
+ # Agent Instructions
+
++Before coding, read `.codebase/router.md` and follow the task route for the current request. Load only the Runtime Docs required by that route unless broader context is necessary.
++
+ ## Coding Style
+
+ ...
+```
+
+For a new file:
+
+```diff
+--- /dev/null
++++ CLAUDE.md
+@@ -0,0 +1,3 @@
++# Project Context
++
++Before coding, read `.codebase/router.md` and follow the task route for the current request. Load only the Runtime Docs required by that route unless broader context is necessary.
+```
 
 ## Operation Rules
 
-`create`:
-- Target path must not exist unless a precondition explicitly allows safe idempotence.
-- Parent directories may be created as part of applying the operation.
+`create` semantics:
+- Target path must not exist unless the user explicitly confirms overwrite.
+- Parent directories may be created as part of applying the patch.
 
-`replace`:
-- Target file must exist unless the suggestion explicitly combines safe creation semantics, which v1 should avoid.
-- Target file must match `baseHash`.
-- Target file must be `generated` according to `.codebase/meta/manifest.json`.
-- `reviewed`, `manual`, or `unknown` ownership blocks replace.
-
-`patch`:
-- Target file must match `baseHash`.
+`patch` semantics:
+- Target file must exist.
 - Patch must apply cleanly.
-- Use patch for agent entry files and reviewed/manual content.
+- If `baseHash` is provided, target file must match it.
 
 ## Blocking Conditions
 
 Stop without writing when:
 
 - Agent Scope is unknown.
-- suggestion id/path is not explicit.
-- suggestion JSON is missing or invalid.
-- schema major version is unsupported.
-- suggestion type is unsupported.
-- any operation action is unsupported.
-- source fingerprints do not match.
-- target preconditions fail.
-- `baseHash` does not match.
-- `replace` targets non-generated ownership.
+- patch is missing or malformed.
+- target file existence does not match patch expectation.
+- `baseHash` does not match current file hash.
 - patch does not apply cleanly.
-- the bundle contains destructive operations or shell commands.
 
 ## Validation Checklist
 
 Before finishing:
 
-- Confirm no write occurred before Apply Guard passed.
-- Confirm every operation was supported.
-- Confirm changed files match the suggestion operations.
+- Confirm no write occurred before the guard passed.
+- Confirm changed files match the patch.
 - Confirm no `.codebase-*` variants were created.
-- Confirm human-facing result is Simplified Chinese with technical proper nouns preserved.
+- Confirm human-facing result uses the user's preferred language, defaulting to English, with technical proper nouns preserved.

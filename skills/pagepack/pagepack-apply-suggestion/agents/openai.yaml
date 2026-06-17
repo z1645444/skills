@@ -1,4 +1,4 @@
 interface:
   display_name: "Pagepack Apply Suggestion"
-  short_description: "Safely apply Pagepack suggestions"
-  default_prompt: "Use $pagepack-apply-suggestion to apply a reviewed Pagepack suggestion safely."
+  short_description: "Apply a reviewed unified diff patch"
+  default_prompt: "Use $pagepack-apply-suggestion to apply a reviewed unified diff patch. Provide the patch and optional baseHash."

@@ -1,4 +1,4 @@
 interface:
   display_name: "Pagepack Suggest Adapters"
-  short_description: "Plan agent adapter patches"
-  default_prompt: "Use $pagepack-suggest-adapters to generate a reviewable agent entry patch suggestion."
+  short_description: "Generate agent entry patch"
+  default_prompt: "Use $pagepack-suggest-adapters to generate a unified diff patch for AGENTS.md or CLAUDE.md. Add trailing text for directional guidance."

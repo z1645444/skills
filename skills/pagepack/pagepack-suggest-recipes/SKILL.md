@@ -1,19 +1,19 @@
 ---
 name: pagepack-suggest-recipes
-description: Generate reviewable Pagepack Page Recipe Candidates from existing page inventory, project usage, UI usage, and module granularity evidence. Use when recurring management-system page types need candidate recipes, Representative Page suggestions, confidence summaries, and source references without inventing templates or directly modifying Runtime Docs.
+description: Discover recurring management-system page types and output directly applicable patches for `.codebase/examples/page-types/*.md`. No persistent suggestion bundles.
 ---
 
 # Pagepack Suggest Recipes
 
 ## Overview
 
-Use this skill to discover recurring page implementation patterns and propose Page Recipe Candidates. It may write recipe suggestion JSON/MD under `.codebase/meta/suggestions/`, but must not directly modify Runtime Docs or promote low-confidence examples into `examples/page-types/`.
+Use this skill to discover recurring page implementation patterns and propose Page Recipe updates. It outputs directly applicable unified diffs for `.codebase/examples/page-types/*.md`, without writing JSON/MD suggestion bundles under `.codebase/`.
 
-Generated human-facing output must use Simplified Chinese by default. Preserve file paths, command names, API names, framework names, identifiers, component names, page type names, and other technical proper nouns.
+Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, page type names, and other technical proper nouns.
 
 ## Required Reference
 
-Before creating recipe suggestions, read `references/recipe-contracts.md`. It defines Page Recipe Candidate requirements, Representative Page selection, Confidence Gate behavior, source references, and suggestion output rules.
+Before creating recipe patches, read `references/recipe-contracts.md`. It defines Page Recipe requirements, Representative Page selection, Confidence Gate behavior, source references, and patch output rules.
 
 ## Workflow
 
@@ -22,18 +22,14 @@ Before creating recipe suggestions, read `references/recipe-contracts.md`. It de
    - If unknown, stop and ask the user for `--agent` or `--all`.
    - Do not continue in a generic fallback mode.
 
-2. Load pack and evidence.
-   - Read `.codebase/meta/manifest.json` when present.
-   - Read page inventory evidence.
-   - Read project usage evidence.
-   - Read UI usage evidence.
-   - Read module granularity evidence.
-   - Read existing `examples/page-types/` when present.
-   - If evidence is missing, stop or generate a blocked summary rather than inventing recipes.
+2. Load existing Runtime Docs.
+   - Read `.codebase/router.md` and existing `.codebase/examples/page-types/*.md` when present.
+   - Read `.codebase/knowledge/*.md` for context.
+   - If `.codebase/` is missing, stop and recommend `pagepack-init`.
 
 3. Discover recurring page types.
    - Identify management-system page types such as list/table pages, form pages, detail pages, modal/drawer operations, import/export flows, dashboards, or workflow pages.
-   - Use feature evidence such as route/page entries, imports, JSX components, framework hooks, request calls, style usage, and file layout.
+   - Use project source such as route/page entries, imports, JSX components, framework hooks, request calls, style usage, and file layout.
    - Do not classify based on filename alone.
 
 4. Select Representative Page candidates.
@@ -43,19 +39,26 @@ Before creating recipe suggestions, read `references/recipe-contracts.md`. It de
 
 5. Apply Confidence Gate.
    - High confidence can propose `examples/page-types/*.md` Runtime Docs.
-   - Medium/low confidence stays in `.codebase/meta/candidates/page-recipes.md` or review-only suggestions.
+   - Medium/low confidence should be reported in the summary and skipped from patch output unless explicitly requested.
    - Do not promote a recipe if source evidence is sparse or conflicting.
 
-6. Write suggestion artifacts.
-   - Write `.codebase/meta/suggestions/recipes-*.json`.
-   - Write `.codebase/meta/suggestions/recipes-*.md`.
-   - Use operations targeting `meta/candidates/page-recipes.md` for normal candidates.
-   - Use operations targeting `examples/page-types/*.md` only for high-confidence recipes.
-   - Do not directly modify Runtime Docs.
+6. Output the patch.
+   - Present unified diffs for proposed `examples/page-types/*.md` files.
+   - Include optional `baseHash` for existing files.
+   - Do not write files under `.codebase/` directly.
 
 7. Report result.
-   - Summarize discovered page types, Representative Page candidates, confidence, source references, and suggestion id.
-   - Include apply instruction: `pagepack-apply-suggestion <id>`.
+   - Summarize discovered page types, Representative Page candidates, confidence, source references, and proposed files.
+   - Include apply instruction: use `pagepack-apply-suggestion` with the provided patch, or apply the diff directly if reviewed.
+
+## Trailing Prompt Guidance
+
+If the user provides trailing text after `pagepack-suggest-recipes`, treat it as directional guidance. Examples:
+
+- `pagepack-suggest-recipes focus on list pages with filters`
+- `pagepack-suggest-recipes only dashboard patterns`
+
+The output must still be concrete, applicable patch/diffs, not a freeform conversation response.
 
 ## Recipe Boundaries
 
@@ -67,7 +70,7 @@ Page Recipes are compact project-derived implementation patterns. They are not:
 - LLM-invented examples;
 - replacements for Coding Rules.
 
-Each recipe candidate should explain:
+Each recipe should explain:
 
 - when to use it;
 - canonical shape;
@@ -90,12 +93,11 @@ Do not:
 
 ## Failure Rules
 
-Stop or report blocked candidate generation when:
+Stop or report blocked recipe generation when:
 
 - Agent Scope is unknown.
-- page inventory evidence is missing.
-- project usage, UI usage, or module granularity evidence is too weak.
-- there are too few similar pages for meaningful grouping.
+- `.codebase/` is missing.
+- project source is too weak for meaningful grouping.
 - source references are unavailable.
 - candidate representative pages are mostly legacy, one-off, or conflicting.
 
@@ -103,10 +105,10 @@ Stop or report blocked candidate generation when:
 
 Before finishing:
 
-- Suggestion JSON and Markdown summary were written under `.codebase/meta/suggestions/`.
-- Every candidate has source references.
-- Ordinary candidates target `meta/candidates/page-recipes.md`.
-- Only high-confidence candidates target `examples/page-types/*.md`.
+- A concrete unified diff was output for each proposed recipe file.
+- Every proposed recipe has source references.
+- Low-confidence candidates were reported but not promoted to patch output unless requested.
 - No Runtime Doc was directly modified.
 - No template was invented without evidence.
-- Human-facing output is Simplified Chinese with technical proper nouns preserved.
+- Trailing prompt guidance was respected if provided.
+- Human-facing output uses the user's preferred language, defaulting to English, with technical proper nouns preserved.

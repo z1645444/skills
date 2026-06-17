@@ -1,24 +1,23 @@
 # Pagepack Recipe Contracts
 
-This reference defines the v1 suggestion contract for Page Recipe Candidates. Human-facing output defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, page type names, and suggestion ids.
+This reference defines the contract for Page Recipe patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, page type names, and other technical proper nouns.
 
 ## Scope
 
-`pagepack-suggest-recipes` discovers and proposes Page Recipe Candidates. It may write suggestion JSON/MD under `.codebase/meta/suggestions/`, but it must not directly modify Runtime Docs.
+`pagepack-suggest-recipes` discovers and proposes Page Recipe updates. It does not write suggestion bundles under `.codebase/` and does not directly modify Runtime Docs.
 
 It reads:
 
-- `.codebase/meta/manifest.json` when present;
-- page inventory evidence;
-- project usage evidence;
-- UI usage evidence;
-- module granularity evidence;
-- existing `examples/page-types/` docs when present.
+- `.codebase/router.md`;
+- existing `.codebase/examples/page-types/` docs when present;
+- `.codebase/knowledge/*.md` for context;
+- project source for evidence.
 
-It writes:
+It outputs:
 
-- `.codebase/meta/suggestions/recipes-*.json`;
-- `.codebase/meta/suggestions/recipes-*.md`.
+- unified diff patch blocks for `.codebase/examples/page-types/*.md`;
+- optional `baseHash` for existing files;
+- a concise human-facing summary.
 
 ## Agent Scope
 
@@ -30,7 +29,7 @@ Every Pagepack capability needs Agent Scope.
 
 ## Evidence Requirements
 
-Do not create a recipe candidate without source references.
+Do not create a recipe without source references.
 
 Useful evidence:
 
@@ -98,7 +97,7 @@ high confidence
 
 medium confidence
   Pattern is visible but evidence is limited or mixed.
-  Must stay under .codebase/meta/candidates/page-recipes.md or review-only suggestion.
+  Report in summary; do not include in patch output unless user explicitly asks for exploratory candidates.
 
 low confidence
   Too few pages, conflicting implementation, or weak references.
@@ -107,9 +106,9 @@ low confidence
 
 Do not promote Page Recipe Candidates into Runtime Docs unless they pass the Confidence Gate.
 
-## Candidate Content
+## Recipe Content
 
-A candidate should include:
+A recipe should include:
 
 - page type;
 - when to use;
@@ -118,74 +117,50 @@ A candidate should include:
 - source references;
 - confidence;
 - evidence summary;
-- caveats and legacy risks;
-- whether it is recommended for Runtime Docs.
+- caveats and legacy risks.
 
 Avoid large code dumps. If a minimal snippet is included, it must be derived from real source patterns and kept compact.
 
-## Suggestion Schema
+## Patch Output Format
 
-Recipe suggestions use the standard v1 schema:
+The skill outputs unified diffs. For a new recipe file:
 
-```json
-{
-  "schemaVersion": "1.0.0",
-  "id": "recipes-20260610-001",
-  "type": "recipe-candidate",
-  "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "pagepack-suggest-recipes",
-  "agentScope": ["codex"],
-  "risk": "medium",
-  "sourceFingerprints": {},
-  "targetPreconditions": [],
-  "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/recipes-20260610-001.md"
-}
+```diff
+--- /dev/null
++++ .codebase/examples/page-types/list-page.md
+@@ -0,0 +1,12 @@
++# List Page
++
++Use for pages that display a searchable, paginated table.
++
++## Canonical Shape
++
++- `SearchForm` + `PageTable` inside `PageContainer`.
++- `useList` hook for data fetching.
++- Columns defined in a separate `columns.tsx` when the table has more than five columns.
++
++## Source References
++
++- `src/pages/users/index.tsx`
 ```
 
-Allowed operation actions:
+For existing files, include optional `baseHash`.
 
-- `create`;
-- `replace` for generated candidate files only with `baseHash`;
-- `patch` for reviewed existing recipe docs.
+## Trailing Prompt Guidance
 
-## Operation Guidance
+Trailing text narrows recipe discovery. Examples:
 
-Use operations targeting `.codebase/meta/candidates/page-recipes.md` for:
+- `pagepack-suggest-recipes focus on list pages with filters`
+- `pagepack-suggest-recipes only dashboard patterns`
 
-- medium confidence candidates;
-- low-confidence leads worth preserving;
-- conflicting patterns;
-- Representative Page candidates needing review.
-
-Use operations targeting `.codebase/examples/page-types/*.md` only for:
-
-- high-confidence recipes;
-- clear source references;
-- generated ownership or reviewed apply path.
-
-If an existing example is reviewed/manual, do not replace it. Use patch or review suggestion.
-
-## Review Summary
-
-Markdown review summary should include:
-
-- suggestion id;
-- discovered page types;
-- candidate count by confidence;
-- Representative Page candidates;
-- source references;
-- high-confidence recipe docs proposed;
-- candidates kept in cold path;
-- risks and unresolved questions;
-- apply instruction: `pagepack-apply-suggestion <id>`.
+The output must still be concrete patch/diffs.
 
 ## Blocking Conditions
 
 Block or report no-op when:
 
 - Agent Scope is unknown;
-- page inventory evidence is missing;
+- `.codebase/` is missing;
 - source references are unavailable;
 - there are too few similar pages for meaningful grouping;
 - all candidates are legacy or one-off;

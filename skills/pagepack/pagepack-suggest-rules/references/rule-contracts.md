@@ -1,24 +1,23 @@
 # Pagepack Rule Contracts
 
-This reference defines the v1 suggestion contract for Coding Rule candidates. Human-facing output defaults to Simplified Chinese; preserve file paths, command names, API names, framework names, component names, identifiers, rule target names, and suggestion ids.
+This reference defines the contract for Coding Rule patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, rule target names, and other technical proper nouns.
 
 ## Scope
 
-`pagepack-suggest-rules` proposes Runtime Rule updates. It may write suggestion JSON/MD under `.codebase/meta/suggestions/`, but it must not directly modify Runtime Rules.
+`pagepack-suggest-rules` proposes Runtime Rule updates. It does not write suggestion bundles under `.codebase/` and does not directly modify Runtime Rules.
 
 It reads:
 
-- `.codebase/meta/manifest.json`;
-- manifest `files` ownership map;
+- `.codebase/router.md`;
 - `.codebase/knowledge/*`;
-- `.codebase/meta/evidence/*`;
-- `.codebase/meta/candidates/*`;
-- existing `.codebase/rules/*.md`.
+- existing `.codebase/rules/*.md`;
+- project source for evidence.
 
-It writes:
+It outputs:
 
-- `.codebase/meta/suggestions/rules-*.json`;
-- `.codebase/meta/suggestions/rules-*.md`.
+- unified diff patch blocks for `.codebase/rules/*.md`;
+- optional `baseHash` for existing files;
+- a concise human-facing summary including blocked candidates.
 
 ## Agent Scope
 
@@ -26,7 +25,7 @@ Every Pagepack capability needs Agent Scope.
 
 - Use current agent only when reliably known.
 - If current agent is unknown, stop and ask for `--agent` or `--all`.
-- `--all` does not create per-agent rules or pack variants.
+- `--all` does not create multiple packs or per-agent rules.
 
 ## Rule Targets
 
@@ -49,14 +48,14 @@ Unsupported targets should block instead of creating ad hoc rule files.
 
 ## Runtime Rule Ownership
 
-Runtime `rules/*.md` are `reviewed` by default. They express expected agent behavior, not regenerated observations.
+Runtime `rules/*.md` express expected agent behavior, not regenerated observations. Treat them as reviewed by default.
 
 Rules:
 
-- Do not `replace` Runtime Rules in v1.
+- Do not `replace` Runtime Rules wholesale in v1.
 - Use `patch` for existing rule files.
 - Use `create` for missing rule files only when target path is unambiguous.
-- Put uncertain or low-confidence findings in `meta/candidates/*`.
+- Put uncertain or low-confidence findings in the summary, not patch output.
 - Never auto-promote current legacy code into a rule.
 
 ## Observed Knowledge vs Coding Rules
@@ -103,7 +102,7 @@ Framework rules should prevent:
 - unchecked deprecated APIs;
 - freeform prop semantics not supported by docs or repeated safe usage.
 
-Framework best practices and deprecated API migrations are Framework Candidates by default. They require review before Runtime Rule application.
+Framework best practices and deprecated API migrations remain candidates unless evidence is strong.
 
 ## File Structure Rule Candidates
 
@@ -128,66 +127,34 @@ A candidate may be proposed as a Runtime Rule patch only when:
 - it avoids encoding one-off business cases;
 - it does not rely on unsupported framework claims.
 
-Otherwise keep it under `meta/candidates/*`.
+Otherwise report it in the summary as blocked or low-confidence.
 
-## Suggestion Schema
+## Patch Output Format
 
-Rule suggestions use the standard v1 schema:
+The skill outputs unified diffs. For a missing rule file:
 
-```json
-{
-  "schemaVersion": "1.0.0",
-  "id": "rules-20260610-001",
-  "type": "rules-candidate",
-  "createdAt": "2026-06-10T10:00:00Z",
-  "createdBy": "pagepack-suggest-rules",
-  "agentScope": ["codex"],
-  "risk": "medium",
-  "sourceFingerprints": {},
-  "targetPreconditions": [],
-  "operations": [],
-  "reviewSummaryPath": ".codebase/meta/suggestions/rules-20260610-001.md"
-}
+```diff
+--- /dev/null
++++ .codebase/rules/ui.md
+@@ -0,0 +1,6 @@
++# UI Rules
++
++## Component-First UI
++
++Prefer framework/design-system components and props before adding custom styles.
 ```
 
-Allowed operation actions:
+For existing files, use `patch` semantics and include optional `baseHash`.
 
-- `create`;
-- `patch`;
-- `replace` only for generated candidate files, not Runtime Rules.
+## Trailing Prompt Guidance
 
-## Operation Guidance
+Trailing text narrows rule generation. Examples:
 
-Use `patch` for:
+- `pagepack-suggest-rules focus on forms and tables`
+- `pagepack-suggest-rules add rules about API error handling`
+- `pagepack-suggest-rules for the admin module only`
 
-- `.codebase/rules/ui.md`;
-- `.codebase/rules/framework-api.md`;
-- `.codebase/rules/file-structure.md`.
-
-Use `create` for:
-
-- missing rule file with clear path;
-- new candidate file.
-
-Use `replace` only for:
-
-- generated candidate files with `baseHash` guard.
-
-Do not replace reviewed/manual rule files.
-
-## Review Summary
-
-Markdown review summary should include:
-
-- suggestion id;
-- target rule areas;
-- proposed rule candidates;
-- evidence summary;
-- confidence/risk;
-- blocked promotions and reasons;
-- affected Runtime Rule files;
-- candidate files;
-- apply instruction: `pagepack-apply-suggestion <id>`.
+The output must still be concrete patch/diffs.
 
 ## Blocking Conditions
 
@@ -197,6 +164,5 @@ Block or report review-only candidates when:
 - requested target is unsupported;
 - evidence is missing;
 - candidate promotes legacy or low-confidence pattern;
-- candidate conflicts with existing reviewed rules;
-- target operation would replace reviewed/manual Runtime Rules;
+- target operation would replace reviewed/manual Runtime Rules wholesale;
 - rule depends on unverified framework API behavior.

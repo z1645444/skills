@@ -1,19 +1,19 @@
 ---
 name: pagepack-suggest-rules
-description: Generate reviewable Pagepack Coding Rule candidates for `.codebase/rules/ui.md`, `.codebase/rules/framework-api.md`, and `.codebase/rules/file-structure.md`. Use when observed knowledge, evidence artifacts, framework candidates, UI anti-patterns, or module granularity guidance should be proposed as reviewed Runtime Rules without automatically promoting legacy patterns or replacing curated rule files.
+description: Generate directly applicable patch recommendations for `.codebase/rules/ui.md`, `.codebase/rules/framework-api.md`, and `.codebase/rules/file-structure.md`. No persistent suggestion bundles.
 ---
 
 # Pagepack Suggest Rules
 
 ## Overview
 
-Use this skill to propose Coding Rules updates from existing `.codebase/` knowledge and evidence. It may write rules suggestion JSON/MD under `.codebase/meta/suggestions/`, but must not directly modify Runtime Rules or promote low-confidence observations into required agent behavior.
+Use this skill to propose Coding Rules updates. It outputs directly applicable unified diffs for `.codebase/rules/*.md`, without writing JSON/MD suggestion bundles under `.codebase/`.
 
-Generated human-facing output must use Simplified Chinese by default. Preserve file paths, command names, API names, framework names, identifiers, component names, rule target names, and other technical proper nouns.
+Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, rule target names, and other technical proper nouns.
 
 ## Required Reference
 
-Before creating rule suggestions, read `references/rule-contracts.md`. It defines rule targets, ownership behavior, candidate promotion rules, Component-First UI boundaries, framework candidate handling, and suggestion output requirements.
+Before creating rule patches, read `references/rule-contracts.md`. It defines rule targets, candidate promotion rules, Component-First UI boundaries, framework candidate handling, and patch output requirements.
 
 ## Workflow
 
@@ -28,41 +28,43 @@ Before creating rule suggestions, read `references/rule-contracts.md`. It define
    - `file-structure` targets `.codebase/rules/file-structure.md`.
    - If no target is specified, evaluate all three Practical Core rule areas.
 
-3. Load pack evidence.
-   - Read `.codebase/meta/manifest.json` and file ownership map.
-   - Read `knowledge/*` relevant to the target.
-   - Read Evidence Artifacts.
+3. Load pack context.
+   - Read `.codebase/router.md` and `.codebase/knowledge/*` relevant to the target.
    - Read existing `rules/*.md`.
-   - Read `meta/candidates/*` when present.
-   - Stop or report blocked candidates if evidence is missing.
+   - If `.codebase/` is missing, stop and recommend `pagepack-init`.
 
 4. Separate observations from rules.
    - Observed Knowledge describes current code.
    - Coding Rules express expected agent behavior.
    - High-frequency legacy code is not automatically a rule.
-   - Low-confidence observations stay in candidates.
+   - Low-confidence observations stay in the summary, not in patch output.
 
-5. Generate rule candidates.
-   - UI candidates should enforce Component-First UI and UI Decision Ladder.
-   - Framework candidates should prevent invented APIs, wrong import paths, bypassed wrappers, or unchecked deprecated APIs.
-   - File-structure candidates should turn Module Granularity Profile into Granularity Guidance without auto-refactor rules.
-   - Framework best practices and deprecated migrations remain Framework Candidates until reviewed.
+5. Generate rule patches.
+   - UI patches should reinforce Component-First UI and UI Decision Ladder.
+   - Framework patches should prevent invented APIs, wrong import paths, bypassed wrappers, or unchecked deprecated APIs.
+   - File-structure patches should turn Module Granularity Profile into Granularity Guidance without auto-refactor rules.
+   - Framework best practices and deprecated migrations remain candidates unless evidence is strong.
 
-6. Build suggestion operations.
-   - Runtime `rules/*.md` are `reviewed` by default.
-   - Use `patch` for existing reviewed/manual rule files.
-   - Use `create` only when a rule file is missing and target path is unambiguous.
-   - Do not use `replace` for Runtime Rules in v1.
-   - Put uncertain candidates under `meta/candidates/*`.
+6. Output the patch.
+   - Present unified diffs for affected `.codebase/rules/*.md` files.
+   - Use `patch` semantics for existing rule files.
+   - Use `create` semantics for missing rule files.
+   - Include optional `baseHash` for existing files.
+   - Do not write files under `.codebase/` directly.
 
-7. Write suggestion artifacts.
-   - Write `.codebase/meta/suggestions/rules-*.json`.
-   - Write `.codebase/meta/suggestions/rules-*.md`.
-   - Do not directly modify Runtime Rules, candidates, manifest, or evidence outside suggestion operations.
+7. Report result.
+   - Summarize target rules, confidence, risks, blocked promotions, and affected files.
+   - Include apply instruction: use `pagepack-apply-suggestion` with the provided patch, or apply the diff directly if reviewed.
 
-8. Report result.
-   - Summarize target rules, candidate count, confidence, risks, blocked promotions, and suggestion id.
-   - Include apply instruction: `pagepack-apply-suggestion <id>`.
+## Trailing Prompt Guidance
+
+If the user provides trailing text after `pagepack-suggest-rules`, treat it as directional guidance. Examples:
+
+- `pagepack-suggest-rules focus on forms and tables`
+- `pagepack-suggest-rules add rules about API error handling`
+- `pagepack-suggest-rules for the admin module only`
+
+The output must still be concrete, applicable patch/diffs, not a freeform conversation response.
 
 ## Rule Promotion Boundaries
 
@@ -70,9 +72,9 @@ Promote only when:
 
 - evidence is current and source-backed;
 - rule expresses desired agent behavior, not merely current code state;
-- rule does not conflict with confirmed Pagepack suite rules;
+- rule does not conflict with existing reviewed rules;
 - rule is scoped to a Practical Core target;
-- user/team review is expected before Runtime Rule application.
+- user review is expected before rule application.
 
 Do not promote:
 
@@ -88,7 +90,7 @@ Do not promote:
 Do not:
 
 - directly edit `rules/*.md`;
-- replace reviewed/manual rule files;
+- replace reviewed/manual rule files wholesale;
 - generate Page Recipes;
 - perform framework migration;
 - perform UI redesign or screenshot audit;
@@ -102,17 +104,17 @@ Stop or report blocked candidates when:
 - Agent Scope is unknown.
 - requested rule target is unsupported.
 - evidence for requested target is missing.
-- target rule file ownership blocks safe update.
-- candidate would promote low-confidence or legacy pattern.
+- candidate would promote legacy or low-confidence pattern.
 - candidate requires framework API claims that are not evidenced.
 
 ## Validation Checklist
 
 Before finishing:
 
-- Suggestion JSON and Markdown summary were written under `.codebase/meta/suggestions/`.
+- A concrete unified diff was output for each affected rule file.
 - No Runtime Rule was directly modified.
-- Existing Runtime Rules are patched, not replaced.
-- Low-confidence observations remain candidates.
-- Framework best practice and deprecated migration remain candidates unless reviewed.
-- Human-facing output is Simplified Chinese with technical proper nouns preserved.
+- Existing Runtime Rules are patched, not replaced wholesale.
+- Low-confidence observations remain in the summary, not patch output.
+- Framework best practice and deprecated migration remain candidates unless evidence is strong.
+- Trailing prompt guidance was respected if provided.
+- Human-facing output uses the user's preferred language, defaulting to English, with technical proper nouns preserved.

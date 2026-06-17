@@ -1,63 +1,56 @@
 ---
 name: pagepack-init
-description: Directly create the initial agent-neutral `.codebase/` Codebase Knowledge Pack when no pack exists. Use when a management-system frontend project needs first-time `.codebase/` setup, Task Router bootstrap, manifest/evidence scaffolding, and framework/UI/module-granularity observed knowledge; existing packs, recovery, refresh, rules, recipes, and adapter changes still use reviewable suggestions.
+description: Create the initial lightweight `.codebase/` Runtime Docs when no pack exists. Generates router, knowledge, rules, and examples for management-system frontend projects.
 ---
 
 # Pagepack Init
 
 ## Overview
 
-Use this skill to directly create the initial `.codebase/` Codebase Knowledge Pack when no `.codebase/` exists. Initial bootstrap is the only direct-write exception in Pagepack v1 because there is no existing pack knowledge to overwrite.
+Use this skill to create the initial `.codebase/` Codebase Knowledge Pack when no `.codebase/` exists. This is the only capability that writes `.codebase/` directly; it creates only Runtime Docs and does not produce a manifest, evidence artifacts, suggestion bundles, or candidate files.
 
-This skill must not modify agent entry files. Adapter changes still go through `pagepack-suggest-adapters` and `pagepack-apply-suggestion`. Existing packs, recovery, refresh, rules, and recipes also remain reviewable suggestions.
-
-Generated human-facing content must use Simplified Chinese by default. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns.
+`.codebase/` is treated as local output and should normally be gitignored. Generated human-facing content must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns.
 
 ## Required Reference
 
-Before creating an initial pack, read `references/shared-contracts.md`. It defines direct bootstrap rules, file ownership, source classes, router routes, and output requirements.
+Before creating an initial pack, read `references/shared-contracts.md`. It defines bootstrap rules, source classes, router routes, and output requirements.
 
 ## Workflow
 
 1. Resolve Agent Scope.
-   - Use current agent when reliably known.
+   - Use current agent only when reliably known.
    - If unknown, stop and ask the user to provide `--agent` or `--all`.
    - Do not continue in a generic fallback mode.
 
 2. Inspect existing pack state.
    - If no `.codebase/` exists, continue with Direct Pack Bootstrap.
-   - If compatible `.codebase/meta/manifest.json` exists, stop and recommend `pagepack-suggest-refresh`.
-   - If `.codebase/` exists but manifest is missing, create a Pack Recovery suggestion instead of overwriting.
-   - If schema major version is incompatible, stop normal init and create a migration-needed report or migration suggestion.
-   - If `.codebase-*` variants exist, report Single Pack Invariant violation and do not merge automatically.
+   - If `.codebase/` already exists, stop and recommend reviewing or regenerating it manually.
 
 3. Collect Bootstrap Source Minimum.
    - Project identity: `package.json`, lockfile, TypeScript/build config.
-   - Routing/page entries: routes, pages/views/modules, menu config when present.
-   - Framework Authority: framework package metadata, type declarations, exports, docs source when available.
+   - Routing/page entries: routes, pages/views/modules, menu config.
+   - Framework Authority: framework package metadata, type declarations, exports, official/internal docs when available.
    - Project Usage: imports, JSX usage, hooks, wrappers, request/service patterns.
    - UI/style usage: UI components, wrappers, stylesheets, `className`, inline styles.
    - Module granularity: page directory layout, services, hooks, constants, schemas, types.
    - Never read or quote secret-bearing files.
 
-4. Build evidence-backed current snapshot candidates.
+4. Build observed knowledge.
    - Use Framework Authority to verify API existence; use Project Usage to identify default project paths and wrappers.
-   - Treat missing Framework Authority as a Framework Detection Candidate, not as confirmed API guidance.
-   - Separate Observed Knowledge from Coding Rules.
-   - Put low-confidence rules and Page Recipe findings into candidates, not Runtime Rules.
+   - Treat missing Framework Authority as a detection uncertainty, not as confirmed API guidance.
+   - Separate observed knowledge from coding rules.
 
-5. Directly create the initial pack.
-   - Prepare all Runtime Docs, Evidence Artifacts, manifest, candidates, and metadata before writing.
-   - Create the complete Practical Core `.codebase/` structure in one bootstrap pass.
-   - Write `.codebase/router.md`, `.codebase/knowledge/*`, `.codebase/rules/*`, `.codebase/meta/*`, and high-confidence `.codebase/examples/*` when evidence permits.
-   - Write `.codebase/meta/manifest.json` with the v1 Pack Manifest Schema: ISO-8601 string `packVersion`, top-level `generatedBy`, `agentScope`, canonical `sources` entries with `fingerprint`, and `files` ownership.
-   - Do not create `init-*.json` or require `pagepack-apply-suggestion` for the first bootstrap.
-   - Do not modify `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursor/`, or other agent entry files.
+5. Directly create the initial Runtime Docs.
+   - Prepare router, knowledge, rules, and high-confidence examples before writing.
+   - Create the complete Practical Core structure in one bootstrap pass.
+   - Write `.codebase/router.md`, `.codebase/knowledge/*`, `.codebase/rules/*`, and high-confidence `.codebase/examples/page-types/*` when evidence permits.
+   - Do not create `meta/`, `manifest.json`, evidence files, suggestion bundles, or candidate files.
+   - Do not modify `AGENTS.md` or `CLAUDE.md`.
 
 6. Summarize outcome.
-   - Report created files and any skipped or candidate-only areas.
-   - State confidence for framework, UI, module granularity, and Page Recipe candidates.
-   - State recommended next commands: `pagepack-check-pack` and, if adapter setup is needed, `pagepack-suggest-adapters`.
+   - Report created files and any skipped areas.
+   - State confidence for framework, UI, module granularity, and Page Recipe findings.
+   - State recommended next commands: `pagepack-suggest-adapters` if adapter setup is needed.
 
 ## Runtime Docs To Create
 
@@ -77,15 +70,7 @@ Direct bootstrap should create this Practical Core structure when evidence permi
     file-structure.md
   examples/
     page-types/
-  meta/
-    manifest.json
-    evidence/
-    suggestions/
-    candidates/
-    change-log.md
 ```
-
-`knowledge/*.md` are usually `generated`. Runtime `rules/*.md` are `reviewed` by default; project-inferred rules go to `meta/candidates/` or suggestions until confirmed.
 
 ## Failure Rules
 
@@ -93,21 +78,15 @@ Stop instead of guessing when:
 
 - Agent Scope is unknown.
 - Bootstrap Source Minimum is too weak to form a credible pack.
-- an existing compatible pack should be refreshed instead of initialized.
-- multiple pack variants violate Single Pack Invariant.
+- `.codebase/` already exists.
 - framework API guidance would require inventing unverified APIs.
-- recovery, migration, adapter, refresh, rules, or recipe changes would be required; those must use reviewable suggestions.
 
 ## Validation Checklist
 
 Before finishing:
 
-- `.codebase/router.md` and `.codebase/meta/manifest.json` exist after bootstrap.
-- The manifest satisfies the same required fields checked by `pagepack-check-pack`.
-- The manifest records file ownership in `files`.
-- The manifest records freshness fingerprints in canonical `sources` entries.
-- Stable source keys use `projectIdentity`, `frameworkAuthority`, `projectUsage`, `routingPageEntries`, `uiStyleUsage`, and `moduleLayout`.
-- No init suggestion is required for first bootstrap.
+- `.codebase/router.md` and at least the core Runtime Docs exist after bootstrap.
+- No `meta/`, `manifest.json`, evidence, suggestion, or candidate files were created.
 - Agent entry files were not modified.
-- Human-facing output is Simplified Chinese with technical proper nouns preserved.
-- Low-confidence framework, UI, module granularity, or Page Recipe findings remain candidates.
+- Human-facing output uses the user's preferred language, defaulting to English, with technical proper nouns preserved.
+- Low-confidence framework, UI, module granularity, or Page Recipe findings are reported honestly rather than promoted to Runtime Rules.
