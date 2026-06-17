@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pagepack Explain"
+  short_description: "Explain pack evidence and decisions"
+  default_prompt: "Use $pagepack-explain to trace a route, rule, doc, or suggestion back to its evidence."

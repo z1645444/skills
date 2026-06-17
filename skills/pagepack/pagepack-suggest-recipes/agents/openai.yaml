@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pagepack Suggest Recipes"
+  short_description: "Plan page recipe candidates"
+  default_prompt: "Use $pagepack-suggest-recipes to generate reviewable Page Recipe candidates."

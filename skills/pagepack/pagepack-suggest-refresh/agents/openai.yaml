@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pagepack Suggest Refresh"
+  short_description: "Plan .codebase refresh changes"
+  default_prompt: "Use $pagepack-suggest-refresh to generate a reviewable .codebase refresh suggestion."

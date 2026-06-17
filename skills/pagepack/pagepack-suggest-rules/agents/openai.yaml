@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pagepack Suggest Rules"
+  short_description: "Plan coding rule candidates"
+  default_prompt: "Use $pagepack-suggest-rules to generate reviewable Coding Rule candidates."

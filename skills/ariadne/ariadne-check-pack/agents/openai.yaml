@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ariadne Check Pack"
-  short_description: "Verify .codebase pack structure"
-  default_prompt: "Use $ariadne-check-pack to verify .codebase pack structure."

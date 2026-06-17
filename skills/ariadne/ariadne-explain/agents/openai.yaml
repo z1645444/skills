@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ariadne Explain"
-  short_description: "Explain pack evidence and decisions"
-  default_prompt: "Use $ariadne-explain to trace a route, rule, doc, or suggestion back to its evidence."

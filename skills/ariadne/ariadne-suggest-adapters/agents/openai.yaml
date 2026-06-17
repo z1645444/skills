@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ariadne Suggest Adapters"
-  short_description: "Plan agent adapter patches"
-  default_prompt: "Use $ariadne-suggest-adapters to generate a reviewable agent entry patch suggestion."

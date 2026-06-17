@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ariadne Check Adapters"
-  short_description: "Verify agent router entrypoints"
-  default_prompt: "Use $ariadne-check-adapters to verify agent entry files point to .codebase/router.md."
