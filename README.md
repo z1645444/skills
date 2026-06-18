@@ -51,13 +51,14 @@ pagepack-suggest-adapters add note about SSR
 
 ### Adapter Subagents
 
-部分 agent runtime 支持将 broad codebase sweep 委托给 `pagepack-explorer` 子代理：
+部分 agent runtime 支持将 `pagepack-init` 的 knowledge 收集按维度委托给子代理：
 
-- Claude Code: `~/.claude/agents/pagepack-explorer.md`
-- Codex CLI: `~/.codex/agents/pagepack-explorer.toml`
-- Gemini CLI: `~/.gemini/agents/pagepack-explorer.md`（experimental adapter）
+- `pagepack-overview-agent`：项目身份、路由/页面入口
+- `pagepack-framework-agent`：framework authority 与项目用法
+- `pagepack-ui-agent`：UI 组件、wrapper、样式模式
+- `pagepack-granularity-agent`：模块粒度与文件布局
 
-这些子代理定义随相关 skill 一起安装，不属于 `.codebase/`。Pagepack skill 中的指引为条件式：当前 runtime 支持子代理时可委托 broad sweep，否则 inline 搜索。
+安装后位于对应 runtime 的 `agents/` 目录（Claude Code: `~/.claude/agents/`，Codex CLI: `~/.codex/agents/`，Gemini CLI: `~/.gemini/agents/`）。Rules 由主 agent 统一推导，不单独委托。`pagepack-suggest-recipes` 可复用 `pagepack-overview-agent` 和 `pagepack-ui-agent`。
 
 快速开始见 [docs/pagepack-quickstart.md](docs/pagepack-quickstart.md)。
 

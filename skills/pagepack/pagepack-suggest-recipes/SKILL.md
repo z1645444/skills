@@ -31,7 +31,7 @@ Before creating recipe patches, read `references/recipe-contracts.md`. It define
    - Identify management-system page types such as list/table pages, form pages, detail pages, modal/drawer operations, import/export flows, dashboards, or workflow pages.
    - Use project source such as route/page entries, imports, JSX components, framework hooks, request calls, style usage, and file layout.
    - Do not classify based on filename alone.
-   - If the current agent runtime supports subagents, you may delegate the broad discovery sweep to the adapter's `pagepack-explorer` subagent. Otherwise, perform the search inline.
+   - If the current agent runtime supports subagents, spawn `pagepack-overview-agent` and `pagepack-ui-agent` in parallel to collect route and UI signals. Otherwise, perform the search inline.
 
 4. Select Representative Page candidates.
    - Prefer real pages that are typical, complete, simple, recent when evidence exists, and aligned with framework/project wrappers.

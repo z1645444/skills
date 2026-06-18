@@ -27,14 +27,13 @@ Before creating an initial pack, read `references/shared-contracts.md`. It defin
    - If `.codebase/` already exists, stop and recommend reviewing or regenerating it manually.
 
 3. Collect Bootstrap Source Minimum.
-   - Project identity: `package.json`, lockfile, TypeScript/build config.
-   - Routing/page entries: routes, pages/views/modules, menu config.
-   - Framework Authority: framework package metadata, type declarations, exports, official/internal docs when available.
-   - Project Usage: imports, JSX usage, hooks, wrappers, request/service patterns.
-   - UI/style usage: UI components, wrappers, stylesheets, `className`, inline styles.
-   - Module granularity: page directory layout, services, hooks, constants, schemas, types.
+   - If the current agent runtime supports subagents, spawn the following knowledge agents in parallel. Each returns a structured summary for one knowledge dimension; otherwise perform the searches inline.
+     - `pagepack-overview-agent`: project identity, routing/page entries, menu config.
+     - `pagepack-framework-agent`: framework package metadata, exports, project wrapper/hook/service usage, deprecated API risks.
+     - `pagepack-ui-agent`: UI components, wrappers, page compositions, style distribution, UI Anti-Pattern candidates.
+     - `pagepack-granularity-agent`: page directory layout, file splits, locations of services/hooks/constants/schemas/types.
+   - If running inline, still cover all four dimensions above.
    - Never read or quote secret-bearing files.
-   - If the current agent runtime supports subagents, you may delegate broad codebase sweeps to the adapter's `pagepack-explorer` subagent. Otherwise, perform the search inline.
 
 4. Build observed knowledge.
    - Use Framework Authority to verify API existence; use Project Usage to identify default project paths and wrappers.
@@ -42,7 +41,9 @@ Before creating an initial pack, read `references/shared-contracts.md`. It defin
    - Separate observed knowledge from coding rules.
 
 5. Directly create the initial Runtime Docs.
-   - Prepare router, knowledge, rules, and high-confidence examples before writing.
+   - Synthesize the four knowledge summaries into `.codebase/knowledge/*.md`.
+   - Derive `.codebase/rules/*.md` directly from the knowledge summaries and Confidence Gate. The main agent holds full context for rule synthesis; do not spawn a separate rules subagent.
+   - Prepare router and high-confidence examples before writing.
    - Create the complete Practical Core structure in one bootstrap pass.
    - Write `.codebase/router.md`, `.codebase/knowledge/*`, `.codebase/rules/*`, and high-confidence `.codebase/examples/page-types/*` when evidence permits.
    - Do not create `meta/`, `manifest.json`, evidence files, suggestion bundles, or candidate files.
