@@ -49,6 +49,16 @@ pagepack-suggest-recipes focus on list pages with filters
 pagepack-suggest-adapters add note about SSR
 ```
 
+### Adapter Subagents
+
+部分 agent runtime 支持将 broad codebase sweep 委托给 `pagepack-explorer` 子代理：
+
+- Claude Code: `~/.claude/agents/pagepack-explorer.md`
+- Codex CLI: `~/.codex/agents/pagepack-explorer.toml`
+- Gemini CLI: `~/.gemini/agents/pagepack-explorer.md`（experimental adapter）
+
+这些子代理定义随相关 skill 一起安装，不属于 `.codebase/`。Pagepack skill 中的指引为条件式：当前 runtime 支持子代理时可委托 broad sweep，否则 inline 搜索。
+
 快速开始见 [docs/pagepack-quickstart.md](docs/pagepack-quickstart.md)。
 
 ## 添加新 Skill

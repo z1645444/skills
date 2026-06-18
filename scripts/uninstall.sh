@@ -23,6 +23,21 @@ remove_if_exists() {
   fi
 }
 
+subagent_names() {
+  find "$repo_root"/skills -mindepth 2 -maxdepth 3 -type f \( -name '*.md' -o -name '*.toml' \) -print0 |
+    while IFS= read -r -d '' subagent_file; do
+      basename "$subagent_file"
+    done
+}
+
+uninstall_subagents_from() {
+  local root=$1
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    remove_if_exists "$root/$name"
+  done < <(subagent_names)
+}
+
 uninstall_from() {
   local root=$1
   while IFS= read -r name; do
@@ -34,21 +49,25 @@ uninstall_from() {
 uninstall_claude() {
   local root=${CLAUDE_HOME:-$HOME/.claude}/skills
   uninstall_from "$root"
+  uninstall_subagents_from "${CLAUDE_HOME:-$HOME/.claude}/agents"
 }
 
 uninstall_codex() {
   local root=${CODEX_HOME:-$HOME/.codex}/skills
   uninstall_from "$root"
+  uninstall_subagents_from "${CODEX_HOME:-$HOME/.codex}/agents"
 }
 
 uninstall_gemini() {
   local root=${GEMINI_HOME:-$HOME/.gemini}/extensions
   uninstall_from "$root"
+  uninstall_subagents_from "${GEMINI_HOME:-$HOME/.gemini}/agents"
 }
 
 uninstall_antigravity() {
   local root=${GEMINI_HOME:-$HOME/.gemini}/antigravity/skills
   uninstall_from "$root"
+  uninstall_subagents_from "${GEMINI_HOME:-$HOME/.gemini}/antigravity/agents"
 }
 
 case "$target" in

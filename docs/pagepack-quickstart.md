@@ -51,6 +51,10 @@ pagepack-suggest-recipes focus on list pages with filters
 pagepack-suggest-adapters add note about SSR
 ```
 
+### Adapter Subagents
+
+Claude Code、Codex CLI 和 Gemini CLI（experimental）支持将 broad codebase sweep 委托给 `pagepack-explorer` 子代理。相关定义会随 skill 安装到对应 runtime 的 `agents/` 目录。若当前 runtime 不支持子代理，skill 会自动回退到 inline 搜索。
+
 ## 安全模型
 
 - `pagepack-suggest-*` 只输出 unified diff patch，不写文件。

@@ -34,6 +34,7 @@ Before creating an initial pack, read `references/shared-contracts.md`. It defin
    - UI/style usage: UI components, wrappers, stylesheets, `className`, inline styles.
    - Module granularity: page directory layout, services, hooks, constants, schemas, types.
    - Never read or quote secret-bearing files.
+   - If the current agent runtime supports subagents, you may delegate broad codebase sweeps to the adapter's `pagepack-explorer` subagent. Otherwise, perform the search inline.
 
 4. Build observed knowledge.
    - Use Framework Authority to verify API existence; use Project Usage to identify default project paths and wrappers.

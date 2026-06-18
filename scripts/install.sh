@@ -34,12 +34,30 @@ link_skill() {
   echo "$name"
 }
 
+install_subagents() {
+  local runtime=$1 src_root=$2 dst_root=$3
+  [ -d "$src_root" ] || return 0
+  mkdir -p "$dst_root"
+  find "$src_root" -maxdepth 1 -type f \( -name '*.md' -o -name '*.toml' \) -print0 |
+    while IFS= read -r -d '' subagent; do
+      local name
+      name=$(basename "$subagent")
+      local dst=$dst_root/$name
+      if [ -L "$dst" ] || [ -e "$dst" ]; then
+        rm -rf "$dst"
+      fi
+      ln -s "$subagent" "$dst"
+      echo "$runtime subagent: $name"
+    done
+}
+
 install_claude() {
   local root=${CLAUDE_HOME:-$HOME/.claude}/skills
   mkdir -p "$root"
   while IFS= read -r src; do
     [ -n "$src" ] || continue
     echo "claude: $(link_skill "$src" "$root")"
+    install_subagents claude "$src/agents" "${CLAUDE_HOME:-$HOME/.claude}/agents"
   done < <(skill_dirs)
 }
 
@@ -49,6 +67,7 @@ install_codex() {
   while IFS= read -r src; do
     [ -n "$src" ] || continue
     echo "codex: $(link_skill "$src" "$root")"
+    install_subagents codex "$src/agents" "${CODEX_HOME:-$HOME/.codex}/agents"
   done < <(skill_dirs)
 }
 
@@ -76,6 +95,7 @@ install_gemini() {
     } >"$dst/GEMINI.md"
 
     echo "gemini: $name"
+    install_subagents gemini "$src/agents" "${GEMINI_HOME:-$HOME/.gemini}/agents"
   done < <(skill_dirs)
 }
 
@@ -85,6 +105,7 @@ install_antigravity() {
   while IFS= read -r src; do
     [ -n "$src" ] || continue
     echo "antigravity: $(link_skill "$src" "$root")"
+    install_subagents antigravity "$src/agents" "${GEMINI_HOME:-$HOME/.gemini}/antigravity/agents"
   done < <(skill_dirs)
 }
 
