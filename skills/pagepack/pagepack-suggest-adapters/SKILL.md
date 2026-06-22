@@ -47,9 +47,16 @@ Before creating an adapter patch, read `references/adapter-suggestion-contracts.
    - Include target file, optional `baseHash`, and a concise summary of changes.
    - Do not write files under `.codebase/` or modify agent entry files directly.
 
-7. Report result.
+7. Cache the last suggestion.
+   - Write the complete unified diff to `.codebase/.last-suggestion.diff`.
+   - If multiple files are patched, write the combined diff.
+   - This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
+   - Overwrite any existing content without prompting.
+   - Only the most recent suggestion is cached; running another `pagepack-suggest-*` skill overwrites it.
+
+8. Report result.
    - Summarize target agents, entry files, create/patch operations, and warnings.
-   - Include apply instruction: use `pagepack-apply-suggestion` with the provided patch, or apply the diff directly if reviewed.
+   - Include apply instruction: run `pagepack-apply-suggestion` without a patch to apply the cached suggestion from `.codebase/.last-suggestion.diff`, or provide the explicit patch if you want to override.
 
 ## Trailing Prompt Guidance
 
@@ -93,6 +100,7 @@ Stop or report blocked suggestion when:
 Before finishing:
 
 - A concrete unified diff was output for each target agent entry file.
+- Confirm the complete unified diff was written to `.codebase/.last-suggestion.diff` before finishing.
 - No agent entry file was directly modified.
 - Suggested content is a thin Adapter Boot Instruction.
 - Default scope only targets current agent.

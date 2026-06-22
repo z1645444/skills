@@ -1,4 +1,4 @@
 interface:
   display_name: "Pagepack Apply Suggestion"
   short_description: "Apply a reviewed unified diff patch"
-  default_prompt: "Use $pagepack-apply-suggestion to apply a reviewed unified diff patch. Provide the patch and optional baseHash."
+  default_prompt: "Use $pagepack-apply-suggestion to apply a reviewed unified diff patch. Run without a patch to apply the cached `.codebase/.last-suggestion.diff`, or provide an explicit patch and optional `baseHash` to override."

@@ -52,9 +52,16 @@ Before creating rule patches, read `references/rule-contracts.md`. It defines ru
    - Include optional `baseHash` for existing files.
    - Do not write files under `.codebase/` directly.
 
-7. Report result.
+7. Cache the last suggestion.
+   - Write the complete unified diff to `.codebase/.last-suggestion.diff`.
+   - If multiple files are patched, write the combined diff.
+   - This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
+   - Overwrite any existing content without prompting.
+   - Only the most recent suggestion is cached; running another `pagepack-suggest-*` skill overwrites it.
+
+8. Report result.
    - Summarize target rules, confidence, risks, blocked promotions, and affected files.
-   - Include apply instruction: use `pagepack-apply-suggestion` with the provided patch, or apply the diff directly if reviewed.
+   - Include apply instruction: run `pagepack-apply-suggestion` without a patch to apply the cached suggestion from `.codebase/.last-suggestion.diff`, or provide the explicit patch if you want to override.
 
 ## Trailing Prompt Guidance
 
@@ -112,6 +119,7 @@ Stop or report blocked candidates when:
 Before finishing:
 
 - A concrete unified diff was output for each affected rule file.
+- Confirm the complete unified diff was written to `.codebase/.last-suggestion.diff` before finishing.
 - No Runtime Rule was directly modified.
 - Existing Runtime Rules are patched, not replaced wholesale.
 - Low-confidence observations remain in the summary, not patch output.

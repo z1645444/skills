@@ -26,9 +26,12 @@ Every apply run needs Agent Scope.
 
 ## Input Format
 
-The skill accepts a unified diff patch directly from the user. It does not read persisted suggestion JSON/MD bundles or a manifest.
+The skill accepts input in one of two ways:
 
-Example:
+1. An explicit unified diff patch directly from the user. It does not read persisted suggestion JSON/MD bundles or a manifest.
+2. When no explicit patch is provided, the skill reads `.codebase/.last-suggestion.diff`, a tool runtime cache written by `pagepack-suggest-*` skills. This file is not a Runtime Doc; agents should not read or reference it during normal coding.
+
+Example of an explicit patch:
 
 ```diff
 --- AGENTS.md
@@ -67,6 +70,14 @@ Verify that target file existence matches the patch:
 
 If the user explicitly requests overwrite, treat it as a manual exception and report it clearly.
 
+### Last-Suggestion Cache
+
+When no explicit patch is provided, the skill reads `.codebase/.last-suggestion.diff`. Block and recommend running a `pagepack-suggest-*` skill first when:
+
+- the cache file is missing;
+- the cache file is empty;
+- the cache file does not contain a valid unified diff.
+
 ### Base Hash
 
 If a `baseHash` is provided:
@@ -76,7 +87,7 @@ If a `baseHash` is provided:
 - mismatch -> block;
 - missing target unexpectedly -> block.
 
-If no `baseHash` is provided, proceed with file existence and clean patch checks only. This is allowed in the lightweight MVP, but callers are encouraged to provide `baseHash` when available.
+If no `baseHash` is provided, proceed with file existence and clean patch checks only. This is allowed in the lightweight MVP, but callers are encouraged to provide `baseHash` when available. Without `baseHash`, manual edits between suggestion and application may cause the patch to fail.
 
 ## Patch Application
 

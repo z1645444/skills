@@ -31,7 +31,7 @@ Before creating recipe patches, read `references/recipe-contracts.md`. It define
    - Identify management-system page types such as list/table pages, form pages, detail pages, modal/drawer operations, import/export flows, dashboards, or workflow pages.
    - Use project source such as route/page entries, imports, JSX components, framework hooks, request calls, style usage, and file layout.
    - Do not classify based on filename alone.
-   - If the current agent runtime supports subagents, spawn `pagepack-overview-agent` and `pagepack-ui-agent` in parallel to collect route and UI signals. Otherwise, perform the search inline.
+   - If the current agent runtime supports subagents, spawn the corresponding knowledge subagents from the runtime adapter directory (e.g., `.claude/agents/pagepack-overview-agent.md` and `.claude/agents/pagepack-ui-agent.md` for Claude Code) in parallel to collect route and UI signals. Otherwise, perform the search inline.
 
 4. Select Representative Page candidates.
    - Prefer real pages that are typical, complete, simple, recent when evidence exists, and aligned with framework/project wrappers.
@@ -48,9 +48,16 @@ Before creating recipe patches, read `references/recipe-contracts.md`. It define
    - Include optional `baseHash` for existing files.
    - Do not write files under `.codebase/` directly.
 
-7. Report result.
+7. Cache the last suggestion.
+   - Write the complete unified diff to `.codebase/.last-suggestion.diff`.
+   - If multiple files are patched, write the combined diff.
+   - This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
+   - Overwrite any existing content without prompting.
+   - Only the most recent suggestion is cached; running another `pagepack-suggest-*` skill overwrites it.
+
+8. Report result.
    - Summarize discovered page types, Representative Page candidates, confidence, source references, and proposed files.
-   - Include apply instruction: use `pagepack-apply-suggestion` with the provided patch, or apply the diff directly if reviewed.
+   - Include apply instruction: run `pagepack-apply-suggestion` without a patch to apply the cached suggestion from `.codebase/.last-suggestion.diff`, or provide the explicit patch if you want to override.
 
 ## Trailing Prompt Guidance
 
@@ -107,6 +114,7 @@ Stop or report blocked recipe generation when:
 Before finishing:
 
 - A concrete unified diff was output for each proposed recipe file.
+- Confirm the complete unified diff was written to `.codebase/.last-suggestion.diff` before finishing.
 - Every proposed recipe has source references.
 - Low-confidence candidates were reported but not promoted to patch output unless requested.
 - No Runtime Doc was directly modified.

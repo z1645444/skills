@@ -7,7 +7,7 @@ description: Apply a reviewed unified diff patch safely. Checks file existence a
 
 ## Overview
 
-Use this skill to apply a reviewed patch safely. It accepts a unified diff (inline or referenced), runs a minimal guard, and applies the patch. It does not read a manifest, ownership map, or persisted suggestion bundles.
+Use this skill to apply a reviewed patch safely. It accepts a unified diff (inline or referenced). When no patch is provided, it reads the tool runtime cache `.codebase/.last-suggestion.diff` written by `pagepack-suggest-*` skills. This file is not a Runtime Doc; agents should not read or reference it during normal coding. The skill runs a minimal guard and applies the patch. It does not read a manifest, ownership map, or persisted suggestion bundles.
 
 Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns.
 
@@ -23,13 +23,15 @@ Before applying, read `references/apply-contracts.md`. It defines the simplified
    - Do not fall back to generic/manual mode.
 
 2. Accept the patch.
-   - Accept an explicit unified diff block from the user.
+   - If the user provides an explicit unified diff, use it.
+   - Otherwise, read the tool runtime cache `.codebase/.last-suggestion.diff` (not a Runtime Doc).
    - Optionally accept a `baseHash` for the target file.
    - Do not locate or parse persisted suggestion JSON/MD bundles.
 
 3. Run Apply Guard before writing anything.
    - Verify target file existence matches the patch expectation (existing for `patch`, absent for `create`).
    - If `baseHash` is provided, compute the current file hash and compare.
+   - If the last-suggestion cache is missing, empty, or malformed, and no explicit patch was given, stop and recommend running a `pagepack-suggest-*` skill first.
    - If any guard fails, report the blocking reason and write nothing.
 
 4. Apply the patch.
@@ -85,6 +87,7 @@ Stop without writing when:
 
 - Agent Scope is unknown.
 - patch is missing or malformed.
+- `.codebase/.last-suggestion.diff` is missing when no explicit patch is provided.
 - target file existence does not match patch expectation.
 - `baseHash` does not match current file hash.
 - patch does not apply cleanly.
@@ -96,4 +99,5 @@ Before finishing:
 - Confirm no write occurred before the guard passed.
 - Confirm changed files match the patch.
 - Confirm no `.codebase-*` variants were created.
+- Confirm `.codebase/.last-suggestion.diff` was treated only as a tool runtime cache, not as a Runtime Doc or agent-readable source.
 - Confirm human-facing result uses the user's preferred language, defaulting to English, with technical proper nouns preserved.
