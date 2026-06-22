@@ -24,12 +24,12 @@ scripts/install.sh gemini
 
 1. 在项目根目录运行 `pagepack-init`，直接创建初始 `.codebase/` Runtime Docs。
 2. 运行 `pagepack-suggest-adapters`，为当前 agent entry file 生成接入 `.codebase/router.md` 的 patch。
-3. review patch 后，用 `pagepack-apply-suggestion` 应用，或直接让 agent 应用该 diff。
+3. review patch 后，运行 `pagepack-apply-suggestion` 应用缓存的 patch（它会读取 `.codebase/.last-suggestion.diff`）；也可以直接提供 diff 给 `pagepack-apply-suggestion` 以覆盖缓存。
 
 ## 日常使用
 
 - 改代码前让 agent 读取 `.codebase/router.md`，按任务类型加载所需 Runtime Docs。
-- 需要更新规则或示例时，运行 `pagepack-suggest-rules` 或 `pagepack-suggest-recipes`，review patch 后应用。
+- 需要更新规则或示例时，运行 `pagepack-suggest-rules` 或 `pagepack-suggest-recipes`，review patch 后运行 `pagepack-apply-suggestion` 应用缓存的 patch。
 
 ## 常用命令速查
 
@@ -60,10 +60,10 @@ Claude Code、Codex CLI 和 Gemini CLI（experimental）支持在 `pagepack-init
 - `pagepack-ui-agent`
 - `pagepack-granularity-agent`
 
-规则由主 agent 统一推导，不单独委托。`pagepack-suggest-recipes` 可复用 `pagepack-overview-agent` 和 `pagepack-ui-agent`。若当前 runtime 不支持子代理，skill 会自动回退到 inline 搜索。
+规则由主 agent 统一推导，不单独委托。`pagepack-suggest-recipes` 可复用对应 runtime adapter 目录下的 knowledge 子代理（如 `.claude/agents/pagepack-overview-agent.md` 和 `.claude/agents/pagepack-ui-agent.md`）来收集信号。若当前 runtime 不支持子代理，skill 会自动回退到 inline 搜索。
 
 ## 安全模型
 
-- `pagepack-suggest-*` 只输出 unified diff patch，不写文件。
-- `pagepack-apply-suggestion` 检查文件存在性和可选 `baseHash` 后应用 patch。
+- `pagepack-suggest-*` 输出 unified diff patch，并将同一份 diff 写入 `.codebase/.last-suggestion.diff` 作为工具运行时缓存，不直接修改 Runtime Docs。
+- `pagepack-apply-suggestion` 默认读取 `.codebase/.last-suggestion.diff` 并应用；也接受显式 patch 和可选 `baseHash` 作为覆盖。
 - `pagepack-init` 在没有 `.codebase/` 时直接创建 Runtime Docs。
