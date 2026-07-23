@@ -1,20 +1,17 @@
 # Pagepack Shared Contracts
 
-This reference defines the contracts used by `pagepack-init`. Human-facing generated content uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
-
-`pagepack-init` is a direct bootstrap capability when no `.codebase/` exists. It creates Runtime Docs immediately and does not produce intermediate artifacts such as a manifest, evidence files, suggestion bundles, or candidate files.
-
-`.codebase/` is local output and should normally be gitignored.
+This reference is the family-wide contract for all Pagepack capabilities. Every `pagepack-*` skill must read this file before its capability-specific contract. From another skill directory, resolve it as `../pagepack-init/references/shared-contracts.md` relative to that skill's own directory; the Pagepack family is installed together, so this sibling path is stable.
 
 ## Agent Scope
 
-Every Pagepack capability needs an explicit Agent Scope.
+Every Pagepack capability that writes or proposes changes needs an explicit Agent Scope.
 
 - Default to the current agent only when it is reliably known.
 - Use `--agent <codex|claude>` for a specific agent.
 - Use `--all` only to expand agent compatibility or adapter scope.
 - If current agent is unknown and no explicit scope is provided, stop and ask for scope.
 - Agent Scope must not create agent-specific `.codebase-*` variants.
+- Exception: `pagepack-check-pack` is read-only and agent-neutral; it runs without Agent Scope resolution.
 
 ## Single Pack Invariant
 
@@ -27,34 +24,79 @@ Do not create:
 .codebase-claude/
 ```
 
-## Bootstrap State Rules
+## Pack Lifecycle
 
-Handle existing pack state as follows:
+A pack has two states:
 
 ```text
-No .codebase/
-  -> directly create initial Codebase Knowledge Pack
+Bootstrap
+  No .codebase/ exists. pagepack-init creates Runtime Docs directly.
+  This is the only direct-write path in the family.
 
-.codebase/ exists
-  -> stop init and recommend reviewing or regenerating manually
+Curated Maintenance
+  .codebase/ exists. Pagepack-driven changes go through
+  pagepack-suggest-* patches, reviewed and applied via
+  pagepack-apply-suggestion. Maintainers may also hand-edit Runtime
+  Docs directly; pagepack-check-pack keeps both channels honest.
 ```
 
-## Bootstrap Source Minimum
+A curated pack may be version-controlled (as its own git repository or committed to the host repository) and hand-edited by maintainers. Treat hand-written content as first-class:
 
-Inspect these source classes before creating an initial pack:
+- produce minimal diffs against current file content, never wholesale rewrites;
+- always include `baseHash` for existing files;
+- do not regenerate a document from scratch when patching a few facts is enough.
 
-- Project identity: `package.json`, lockfile, TypeScript/build config.
-- Routing/page entries: routes, pages/views/modules, menu config.
-- Framework Authority: package metadata, type declarations, exports, official/internal docs when available.
-- Project Usage: imports, JSX usage, hooks, wrappers, request/service patterns.
-- UI/style usage: UI components, wrapper components, stylesheets, `className`, inline styles.
-- Module granularity: file tree, services, hooks, constants, schemas, types.
+Gitignoring `.codebase/` remains valid for solo throwaway usage; version control is the recommended default once the pack accumulates hand-curated content.
 
-If evidence is weak, lower confidence in the generated Runtime Docs. Do not generate a full-trust pack from blind inference.
+## Suggestion Cache Protocol
 
-## Direct Bootstrap Output
+Every `pagepack-suggest-*` capability, after presenting its patch:
 
-For the no-existing-pack bootstrap path, create the complete Practical Core pack directly:
+- writes the complete unified diff to `.codebase/.last-suggestion.diff`;
+- combines multiple file patches into one diff;
+- overwrites existing cache content without prompting.
+
+`.codebase/.last-suggestion.diff` is a tool runtime cache, not a Runtime Doc. Coding agents must not read or reference it during normal tasks. Only the most recent suggestion is cached; running another `pagepack-suggest-*` capability overwrites it. `pagepack-apply-suggestion` reads this cache when no explicit patch is provided.
+
+## Router Coverage Invariant
+
+Every Runtime Doc under `.codebase/examples/` must be explicitly reachable from `.codebase/router.md`: at least one route lists the document's own path. A directory-level mention does not count as explicit coverage.
+
+Consequences:
+
+- any patch that creates, deletes, or renames a document under `examples/` must include `router.md` hunks in the same combined diff so the invariant stays true;
+- router hunks wire documents into existing Practical Core routes; they do not invent new route types;
+- `pagepack-check-pack` enforces this invariant.
+
+## Runtime Docs Ownership
+
+Each Runtime Doc area has a named maintaining capability:
+
+```text
+.codebase/router.md
+  wiring hunks: pagepack-suggest-recipes / pagepack-suggest-rules
+  structural refresh: pagepack-suggest-knowledge
+
+.codebase/knowledge/*.md
+  pagepack-suggest-knowledge
+
+.codebase/rules/*.md
+  pagepack-suggest-rules
+
+.codebase/examples/**/*.md
+  pagepack-suggest-recipes
+
+agent entry files (AGENTS.md / CLAUDE.md)
+  pagepack-suggest-adapters
+
+pack integrity
+  pagepack-check-pack, run standalone or automatically after every
+  pagepack-apply-suggestion application
+```
+
+Hand edits by maintainers are allowed everywhere; ownership names the capability responsible for keeping an area from going stale, not an exclusive writer.
+
+## Practical Core Structure
 
 ```text
 .codebase/
@@ -69,82 +111,13 @@ For the no-existing-pack bootstrap path, create the complete Practical Core pack
     framework-api.md
     file-structure.md
   examples/
-    page-types/
+    page-types/          # Page Recipes: recurring page shapes
+    behaviors/           # Behavior Recipes: cross-cutting behavior conventions
 ```
 
-Do not create:
+`examples/page-types/` holds Page Recipes for recurring page shapes. `examples/behaviors/` holds Behavior Recipes: conventions that cut across page shapes, such as query/table behavior, request lifecycle, or shared interaction constraints. Both doc types follow the same evidence, confidence, and Router Coverage requirements.
 
-```text
-.codebase/meta/
-.codebase/meta/manifest.json
-.codebase/meta/evidence/
-.codebase/meta/suggestions/
-.codebase/meta/candidates/
-.codebase/meta/change-log.md
-```
-
-The final user-facing summary must include:
-
-- created files
-- skipped or low-confidence areas
-- framework, UI, module granularity, and Page Recipe confidence
-- recommended next command: `pagepack-suggest-adapters`
-
-## Practical Core Routes
-
-Generate `.codebase/router.md` from stable route types:
-
-- UI/Layout Change
-- Framework/API Usage
-- Page Feature Iteration
-- Debug Existing Page
-- New Page/Module
-- Style/CSS Change
-
-Fill links dynamically based on available Runtime Docs. Do not invent project-specific route categories during bootstrap.
-
-## UI Decision Ladder
-
-Style/CSS tasks must route agents through this order:
-
-1. Check Page Recipes or same-type pages.
-2. Check existing framework/design-system components.
-3. Check component props.
-4. Check project wrapper components.
-5. Check accepted local patterns.
-6. Add custom styles only when the above are insufficient.
-
-Custom style must stay local, avoid duplicating design-system behavior, and not create a new visual language.
-
-## Framework Guidance
-
-Use Framework Authority to validate API existence and Project Usage to identify project defaults.
-
-- Confirmed API + high project usage -> Runtime Docs candidate.
-- Missing authority + project import pattern -> uncertainty, not confirmed guidance.
-- Deprecated API -> note as risk, not automatic Runtime Rule.
-- Project wrapper is preferred when it is the common project path.
-- Do not infer complex prop semantics unless backed by clear docs or repeated safe usage.
-
-## Runtime Docs Ownership Defaults
-
-Recommended bootstrap ownership intent:
-
-```text
-.codebase/router.md
-  maintained by Pagepack init/suggest refresh (now direct rewrite)
-
-.codebase/knowledge/*.md
-  maintained by Pagepack init/suggest refresh (now direct rewrite)
-
-.codebase/rules/*.md
-  reviewed guidance; Pagepack suggest-rules proposes patches
-
-.codebase/examples/page-types/*.md
-  generated when high confidence; otherwise left out of initial bootstrap
-```
-
-There is no persistent ownership map; keep this intent in mind when proposing patches.
+Do not create `.codebase/meta/`, manifest, evidence, suggestion bundles, or candidate files.
 
 ## Language Policy
 

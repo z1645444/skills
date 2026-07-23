@@ -9,18 +9,13 @@ description: Generate directly applicable patch recommendations for `.codebase/r
 
 Use this skill to propose Coding Rules updates. It outputs directly applicable unified diffs for `.codebase/rules/*.md`, without writing JSON/MD suggestion bundles under `.codebase/`.
 
-Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, rule target names, and other technical proper nouns.
-
 ## Required Reference
 
-Before creating rule patches, read `references/rule-contracts.md`. It defines rule targets, candidate promotion rules, Component-First UI boundaries, framework candidate handling, and patch output requirements.
+Before creating rule patches, read `../pagepack-init/references/shared-contracts.md` (family-wide contracts, resolved relative to this skill's directory; if the sibling path cannot be resolved, continue with this skill's own contract and state the missing shared contract in your report) and `references/rule-contracts.md` (rule targets, candidate promotion rules, Component-First UI boundaries, framework candidate handling, and patch output requirements).
 
 ## Workflow
 
-1. Resolve Agent Scope.
-   - Use current agent only when reliably known.
-   - If unknown, stop and ask the user for `--agent` or `--all`.
-   - Do not continue in a generic fallback mode.
+1. Resolve Agent Scope per the shared contracts. If the current agent is unknown and no explicit scope is provided, stop and ask.
 
 2. Select rule target.
    - `ui` targets `.codebase/rules/ui.md`.
@@ -48,16 +43,11 @@ Before creating rule patches, read `references/rule-contracts.md`. It defines ru
 6. Output the patch.
    - Present unified diffs for affected `.codebase/rules/*.md` files.
    - Use `patch` semantics for existing rule files.
-   - Use `create` semantics for missing rule files.
-   - Include optional `baseHash` for existing files.
+   - Use `create` semantics for missing rule files; when creating a rule file, include `router.md` hunks in the same combined diff that wire it into the relevant existing routes.
+   - Include `baseHash` for every existing file touched by the patch.
    - Do not write files under `.codebase/` directly.
 
-7. Cache the last suggestion.
-   - Write the complete unified diff to `.codebase/.last-suggestion.diff`.
-   - If multiple files are patched, write the combined diff.
-   - This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
-   - Overwrite any existing content without prompting.
-   - Only the most recent suggestion is cached; running another `pagepack-suggest-*` skill overwrites it.
+7. Cache the last suggestion per the shared Suggestion Cache Protocol: write the complete combined unified diff to `.codebase/.last-suggestion.diff`, overwriting existing content.
 
 8. Report result.
    - Summarize target rules, confidence, risks, blocked promotions, and affected files.
@@ -119,10 +109,12 @@ Stop or report blocked candidates when:
 Before finishing:
 
 - A concrete unified diff was output for each affected rule file.
+- Newly created rule files have matching `router.md` wiring hunks in the same combined diff.
+- Every existing file touched by the patch has a `baseHash`.
 - Confirm the complete unified diff was written to `.codebase/.last-suggestion.diff` before finishing.
 - No Runtime Rule was directly modified.
 - Existing Runtime Rules are patched, not replaced wholesale.
 - Low-confidence observations remain in the summary, not patch output.
 - Framework best practice and deprecated migration remain candidates unless evidence is strong.
 - Trailing prompt guidance was respected if provided.
-- Human-facing output uses the user's preferred language, defaulting to English, with technical proper nouns preserved.
+- Human-facing output follows the shared Language Policy.

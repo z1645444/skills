@@ -4,7 +4,7 @@ Pagepack 是一组以 `pagepack-` 开头的可组合 skills，用于为 manageme
 
 它的目标不是替代 coding agent，而是让 Codex、Claude Code、Gemini CLI 等 agent 在改代码前先读取同一份项目上下文，减少 UI/UX 漂移、framework API 猜测和文件切分粒度错误。
 
-`.codebase/` 是本地输出，建议加入 `.gitignore`。
+`.codebase/` 支持两种用法：solo 一次性使用可加入 `.gitignore`；持续维护（Curated Pack）推荐纳入版本管理，手工编辑与 pagepack patch 共存。
 
 ## 安装
 
@@ -30,16 +30,20 @@ scripts/install.sh gemini
 
 - 改代码前让 agent 读取 `.codebase/router.md`，按任务类型加载所需 Runtime Docs。
 - 需要更新规则或示例时，运行 `pagepack-suggest-rules` 或 `pagepack-suggest-recipes`，review patch 后运行 `pagepack-apply-suggestion` 应用缓存的 patch。
+- 源码重构后或定期，运行 `pagepack-check-pack` 校验 pack 完整性；发现过时事实时运行 `pagepack-suggest-knowledge` 生成刷新 patch。
+- 每次 `pagepack-apply-suggestion` 都会自动做基线对比校验，报告补丁引入的问题。
 
 ## 常用命令速查
 
-| skill                       | 作用                                       |
-| --------------------------- | ------------------------------------------ |
-| `pagepack-init`             | 首次创建 `.codebase/` Runtime Docs         |
-| `pagepack-suggest-adapters` | 生成 agent entry file 接入 patch           |
-| `pagepack-suggest-recipes`  | 发现常见页面类型 patch                     |
-| `pagepack-suggest-rules`    | 生成 UI / framework / 结构规则 patch       |
-| `pagepack-apply-suggestion` | 应用已 review 的 patch                     |
+| skill                        | 作用                                             |
+| ---------------------------- | ------------------------------------------------ |
+| `pagepack-init`              | 首次创建 `.codebase/` Runtime Docs               |
+| `pagepack-suggest-adapters`  | 生成 agent entry file 接入 patch                 |
+| `pagepack-suggest-recipes`   | 发现页面类型 / 行为约定 patch（含 router 接线）  |
+| `pagepack-suggest-rules`     | 生成 UI / framework / 结构规则 patch             |
+| `pagepack-suggest-knowledge` | 刷新过时 knowledge 事实并修复 router 结构        |
+| `pagepack-apply-suggestion`  | 应用已 review 的 patch 并自动校验                |
+| `pagepack-check-pack`        | 只读校验 pack 完整性                             |
 
 ## Trailing Prompt
 
@@ -64,6 +68,7 @@ Claude Code、Codex CLI 和 Gemini CLI（experimental）支持在 `pagepack-init
 
 ## 安全模型
 
-- `pagepack-suggest-*` 输出 unified diff patch，并将同一份 diff 写入 `.codebase/.last-suggestion.diff` 作为工具运行时缓存，不直接修改 Runtime Docs。
-- `pagepack-apply-suggestion` 默认读取 `.codebase/.last-suggestion.diff` 并应用；也接受显式 patch 和可选 `baseHash` 作为覆盖。
+- `pagepack-suggest-*` 输出 unified diff patch，并将同一份 diff 写入 `.codebase/.last-suggestion.diff` 作为工具运行时缓存，不直接修改 Runtime Docs；对已有文件必须携带 `baseHash`。
+- `pagepack-apply-suggestion` 默认读取 `.codebase/.last-suggestion.diff` 并应用；也接受显式 patch 作为覆盖。apply 成功后自动运行 `pagepack-check-pack` 的机械检查做基线对比，区分补丁引入问题与存量欠账，只报告不回滚。
+- `pagepack-check-pack` 只读，不产出 patch；发现的问题按类别路由到对应的 `pagepack-suggest-*` 能力修复。
 - `pagepack-init` 在没有 `.codebase/` 时直接创建 Runtime Docs。

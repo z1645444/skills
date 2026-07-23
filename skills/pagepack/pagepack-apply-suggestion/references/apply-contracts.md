@@ -1,6 +1,6 @@
 # Pagepack Apply Contracts
 
-This reference defines the simplified application contract for Pagepack patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, and other technical proper nouns.
+This reference defines the application contract for Pagepack patches. Read `../../pagepack-init/references/shared-contracts.md` first for Agent Scope, Suggestion Cache Protocol, and Language Policy.
 
 ## Execution Order
 
@@ -10,8 +10,10 @@ Apply runs in this order:
 1. Resolve Agent Scope
 2. Accept patch input
 3. Run Apply Guard
-4. Apply patch
-5. Report result
+4. Record verification baseline
+5. Apply patch
+6. Run Post-Apply Verification
+7. Report result
 ```
 
 No file write may happen before the guard passes.
@@ -87,7 +89,7 @@ If a `baseHash` is provided:
 - mismatch -> block;
 - missing target unexpectedly -> block.
 
-If no `baseHash` is provided, proceed with file existence and clean patch checks only. This is allowed in the lightweight MVP, but callers are encouraged to provide `baseHash` when available. Without `baseHash`, manual edits between suggestion and application may cause the patch to fail.
+If no `baseHash` is provided, proceed with file existence and clean patch checks only. This is allowed for manual patches, but `pagepack-suggest-*` capabilities always provide `baseHash` for existing files; without it, manual edits between suggestion and application may cause the patch to fail.
 
 ## Patch Application
 
@@ -97,13 +99,39 @@ Apply the unified diff to the target file.
 - If the patch fails, stop and report failure without leaving a partial file when possible.
 - Parent directories may be created for new files.
 
+## Post-Apply Verification
+
+After a successful apply, run the `pagepack-check-pack` mechanical checks in baseline-diff mode:
+
+```text
+baseline
+  run scripts/check-pack.sh (from the pagepack-check-pack skill,
+  resolved as a sibling of this skill's directory) before applying
+
+post-apply
+  run the same script again after applying
+
+introduced = post-apply findings not in baseline  -> report prominently,
+             with fix routing from the check contracts
+pre-existing = findings in both runs              -> report as notes
+resolved   = baseline findings gone after apply   -> report as resolved
+```
+
+Rules:
+
+- verification is automatic; it must run on every successful apply;
+- if `.codebase/` or the check script is unavailable, skip verification and state the reason in the report;
+- verification never blocks or rolls back the applied patch — the patch was human-reviewed before apply; introduced findings get a recommended follow-up patch instead;
+- adapter patches targeting files outside `.codebase/` still trigger verification; the pack state should be unchanged, and the baseline diff proves it.
+
 ## Reporting
 
 Success summary should include:
 
 - target file;
 - whether the file was created or patched;
-- any `baseHash` that was verified.
+- any `baseHash` that was verified;
+- Post-Apply Verification outcome: introduced / pre-existing / resolved finding counts, or the skip reason.
 
 Blocked summary should include:
 

@@ -9,11 +9,9 @@ description: Generate a directly applicable patch for agent entry files `AGENTS.
 
 Use this skill to propose thin Agent Adapter patches. It outputs a directly applicable unified diff for the target agent entry file, without writing JSON/MD suggestion bundles under `.codebase/`.
 
-Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, agent names, framework names, identifiers, component names, and other technical proper nouns.
-
 ## Required Reference
 
-Before creating an adapter patch, read `references/adapter-suggestion-contracts.md`. It defines supported agents, fixed Adapter Boot Instruction, patch rules, and scope handling.
+Before creating an adapter patch, read `../pagepack-init/references/shared-contracts.md` (family-wide contracts, resolved relative to this skill's directory; if the sibling path cannot be resolved, continue with this skill's own contract and state the missing shared contract in your report) and `references/adapter-suggestion-contracts.md` (supported agents, fixed Adapter Boot Instruction, patch rules, and scope handling).
 
 ## Workflow
 
@@ -39,12 +37,12 @@ Before creating an adapter patch, read `references/adapter-suggestion-contracts.
    - Use the fixed Adapter Boot Instruction.
    - Adjust only file format and relative path where needed.
    - Use `create` semantics for missing entry files.
-   - Use `patch` semantics for existing entry files, with an optional `baseHash` for safety.
+   - Use `patch` semantics for existing entry files, with a `baseHash` for safety.
    - Do not copy UI rules, framework API lists, Page Recipes, module granularity rules, or other Runtime Docs into the entry file.
 
 6. Output the patch.
    - Present the unified diff directly to the user.
-   - Include target file, optional `baseHash`, and a concise summary of changes.
+   - Include target file, `baseHash` for existing files, and a concise summary of changes.
    - Do not write files under `.codebase/` or modify agent entry files directly.
 
 7. Cache the last suggestion.

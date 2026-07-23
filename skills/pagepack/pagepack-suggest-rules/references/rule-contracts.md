@@ -1,12 +1,10 @@
 # Pagepack Rule Contracts
 
-This reference defines the contract for Coding Rule patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, framework names, component names, identifiers, rule target names, and other technical proper nouns.
+This reference defines the contract for Coding Rule patches. Read `../../pagepack-init/references/shared-contracts.md` first for Agent Scope, Pack Lifecycle, Suggestion Cache Protocol, Router Coverage Invariant, and Language Policy.
 
 ## Scope
 
 `pagepack-suggest-rules` proposes Runtime Rule updates. It does not write suggestion bundles under `.codebase/` and does not directly modify Runtime Rules.
-
-After outputting the patch, it writes the same unified diff to `.codebase/.last-suggestion.diff` so `pagepack-apply-suggestion` can apply it by default. This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
 
 It reads:
 
@@ -18,16 +16,9 @@ It reads:
 It outputs:
 
 - unified diff patch blocks for `.codebase/rules/*.md`;
-- optional `baseHash` for existing files;
+- `router.md` wiring hunks in the same combined diff when a rule file is created;
+- `baseHash` for every existing file touched;
 - a concise human-facing summary including blocked candidates.
-
-## Agent Scope
-
-Every Pagepack capability needs Agent Scope.
-
-- Use current agent only when reliably known.
-- If current agent is unknown, stop and ask for `--agent` or `--all`.
-- `--all` does not create multiple packs or per-agent rules.
 
 ## Rule Targets
 
@@ -56,7 +47,7 @@ Rules:
 
 - Do not `replace` Runtime Rules wholesale in v1.
 - Use `patch` for existing rule files.
-- Use `create` for missing rule files only when target path is unambiguous.
+- Use `create` for missing rule files only when target path is unambiguous; wire the new file into `router.md` in the same combined diff.
 - Put uncertain or low-confidence findings in the summary, not patch output.
 - Never auto-promote current legacy code into a rule.
 
@@ -146,7 +137,7 @@ The skill outputs unified diffs. For a missing rule file:
 +Prefer framework/design-system components and props before adding custom styles.
 ```
 
-For existing files, use `patch` semantics and include optional `baseHash`.
+For existing files, use `patch` semantics and include `baseHash`.
 
 ## Trailing Prompt Guidance
 

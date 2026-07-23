@@ -1,26 +1,21 @@
 ---
 name: pagepack-apply-suggestion
-description: Apply a reviewed unified diff patch safely. Checks file existence and optional baseHash, then applies the patch. No manifest or ownership lookups.
+description: Apply a reviewed unified diff patch safely. Checks file existence and baseHash, applies the patch, then automatically runs pack integrity checks and reports any findings the patch introduced.
 ---
 
 # Pagepack Apply Suggestion
 
 ## Overview
 
-Use this skill to apply a reviewed patch safely. It accepts a unified diff (inline or referenced). When no patch is provided, it reads the tool runtime cache `.codebase/.last-suggestion.diff` written by `pagepack-suggest-*` skills. This file is not a Runtime Doc; agents should not read or reference it during normal coding. The skill runs a minimal guard and applies the patch. It does not read a manifest, ownership map, or persisted suggestion bundles.
-
-Generated human-facing output must use the user's preferred language. If unspecified, default to English. Preserve file paths, command names, API names, framework names, identifiers, component names, and other technical proper nouns.
+Use this skill to apply a reviewed patch safely. It accepts a unified diff (inline or referenced). When no patch is provided, it reads the tool runtime cache `.codebase/.last-suggestion.diff` written by `pagepack-suggest-*` skills. The skill runs a minimal guard, applies the patch, and then automatically runs Post-Apply Verification: the `pagepack-check-pack` mechanical checks in baseline-diff mode, so findings introduced by the patch are separated from pre-existing debt. It does not read a manifest, ownership map, or persisted suggestion bundles.
 
 ## Required Reference
 
-Before applying, read `references/apply-contracts.md`. It defines the simplified input format, guard rules, and failure behavior.
+Before applying, read `../pagepack-init/references/shared-contracts.md` (family-wide contracts, resolved relative to this skill's directory; if the sibling path cannot be resolved, continue with this skill's own contract and state the missing shared contract in your report) and `references/apply-contracts.md` (input format, guard rules, Post-Apply Verification, and failure behavior).
 
 ## Workflow
 
-1. Resolve Agent Scope.
-   - Use current agent only when reliably known.
-   - If unknown, stop and ask the user for `--agent` or `--all`.
-   - Do not fall back to generic/manual mode.
+1. Resolve Agent Scope per the shared contracts. If the current agent is unknown and no explicit scope is provided, stop and ask.
 
 2. Accept the patch.
    - If the user provides an explicit unified diff, use it.
@@ -34,12 +29,23 @@ Before applying, read `references/apply-contracts.md`. It defines the simplified
    - If the last-suggestion cache is missing, empty, or malformed, and no explicit patch was given, stop and recommend running a `pagepack-suggest-*` skill first.
    - If any guard fails, report the blocking reason and write nothing.
 
-4. Apply the patch.
+4. Record the verification baseline.
+   - If `.codebase/` exists, run `bash ../pagepack-check-pack/scripts/check-pack.sh <repo-root>` (path resolved relative to this skill's directory) and keep its output as the baseline.
+   - If the pack or the script is unavailable, note that verification will be skipped and continue.
+
+5. Apply the patch.
    - Apply the unified diff to the target file.
    - If the patch does not apply cleanly, stop and report failure.
 
-5. Report result.
-   - Summarize applied files.
+6. Run Post-Apply Verification.
+   - Run the same check script again and compare with the baseline.
+   - Findings only in the post-apply run were introduced by this patch: report them prominently with the fix routing from the check contracts.
+   - Findings in both runs are pre-existing debt: report them as notes.
+   - Findings only in the baseline were fixed by this patch: report them as resolved.
+   - Never roll the patch back; the patch was human-reviewed. Recommend a follow-up patch for introduced findings.
+
+7. Report result.
+   - Summarize applied files and the verification outcome (introduced / pre-existing / resolved counts, or the reason verification was skipped).
    - If blocked, state which guard failed and recommend regenerating the patch.
 
 ## Input Format
@@ -92,12 +98,16 @@ Stop without writing when:
 - `baseHash` does not match current file hash.
 - patch does not apply cleanly.
 
+A Post-Apply Verification finding is not a blocking condition; it is reported, not rolled back.
+
 ## Validation Checklist
 
 Before finishing:
 
 - Confirm no write occurred before the guard passed.
 - Confirm changed files match the patch.
+- Confirm Post-Apply Verification ran, or its skip reason was reported.
+- Findings introduced by the patch are clearly separated from pre-existing debt.
 - Confirm no `.codebase-*` variants were created.
 - Confirm `.codebase/.last-suggestion.diff` was treated only as a tool runtime cache, not as a Runtime Doc or agent-readable source.
-- Confirm human-facing result uses the user's preferred language, defaulting to English, with technical proper nouns preserved.
+- Human-facing output follows the shared Language Policy.

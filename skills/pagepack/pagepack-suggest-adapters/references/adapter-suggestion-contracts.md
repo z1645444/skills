@@ -1,6 +1,6 @@
 # Pagepack Adapter Suggestion Contracts
 
-This reference defines the contract for Agent Adapter patches. Human-facing output uses the user's preferred language, defaulting to English; preserve file paths, command names, API names, agent names, framework names, component names, identifiers, and other technical proper nouns.
+This reference defines the contract for Agent Adapter patches. Read `../../pagepack-init/references/shared-contracts.md` first for Agent Scope, Suggestion Cache Protocol, and Language Policy.
 
 ## Scope
 
@@ -17,7 +17,7 @@ It reads:
 It outputs:
 
 - unified diff patch blocks for `AGENTS.md` and/or `CLAUDE.md`;
-- optional `baseHash` for existing files;
+- `baseHash` for existing files;
 - a concise human-facing summary.
 
 ## Agent Scope
@@ -117,7 +117,7 @@ Example for an existing `AGENTS.md`:
  ...
 ```
 
-For existing files, include an optional `baseHash` so `pagepack-apply-suggestion` can guard against stale application.
+For existing files, include a `baseHash` so `pagepack-apply-suggestion` can guard against stale application.
 
 ## Operation Guidance
 
