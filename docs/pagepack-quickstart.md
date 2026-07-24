@@ -12,12 +12,13 @@ Pagepack 是一组以 `pagepack-` 开头的可组合 skills，用于为 manageme
 scripts/install.sh
 ```
 
-默认安装到 Codex、Claude Code 和 Gemini CLI。只安装单个运行时：
+默认安装到所有支持的 runtimes。只安装单个运行时：
 
 ```bash
 scripts/install.sh codex
 scripts/install.sh claude
 scripts/install.sh gemini
+scripts/install.sh antigravity
 ```
 
 ## 首次使用
@@ -29,6 +30,7 @@ scripts/install.sh gemini
 ## 日常使用
 
 - 改代码前让 agent 读取 `.codebase/router.md`，按任务类型加载所需 Runtime Docs。
+- 完成一段有沉淀价值的开发（新页面、踩坑解法、首次使用的组件组合）后，用定向 trailing prompt 做增量沉淀：`pagepack-suggest-recipes focus on the modules touched by recent commits`，review 后运行 `pagepack-apply-suggestion`。
 - 需要更新规则或示例时，运行 `pagepack-suggest-rules` 或 `pagepack-suggest-recipes`，review patch 后运行 `pagepack-apply-suggestion` 应用缓存的 patch。
 - 源码重构后或定期，运行 `pagepack-check-pack` 校验 pack 完整性；发现过时事实时运行 `pagepack-suggest-knowledge` 生成刷新 patch。
 - 每次 `pagepack-apply-suggestion` 都会自动做基线对比校验，报告补丁引入的问题。
@@ -52,6 +54,7 @@ scripts/install.sh gemini
 ```text
 pagepack-suggest-rules focus on forms and tables
 pagepack-suggest-recipes focus on list pages with filters
+pagepack-suggest-recipes focus on the modules touched by recent commits
 pagepack-suggest-adapters add note about SSR
 ```
 
@@ -65,6 +68,17 @@ Claude Code、Codex CLI 和 Gemini CLI（experimental）支持在 `pagepack-init
 - `pagepack-granularity-agent`
 
 规则由主 agent 统一推导，不单独委托。`pagepack-suggest-recipes` 可复用对应 runtime adapter 目录下的 knowledge 子代理（如 `.claude/agents/pagepack-overview-agent.md` 和 `.claude/agents/pagepack-ui-agent.md`）来收集信号。若当前 runtime 不支持子代理，skill 会自动回退到 inline 搜索。
+
+## 已有 pack 升级到 v2
+
+旧版本创建的 pack（无版本标记）不需要重建，也不会因不升级而损坏；新能力面对它按 v1 旧布局保守处理。升级是一次体检：
+
+1. 运行 `pagepack-check-pack`，一次跑出全部欠账。
+2. 修复 C1/C3（失效引用）与 C2（未被 router 显式列出的 examples 文档）：让 agent 出 patch 走 `pagepack-apply-suggestion`，或手工修改。
+3. 确认结构符合 v2 预期后，在 `router.md` 首行加 `<!-- pagepack: 2 -->`。
+4. 若该项目把 `.codebase/` 纳入了版本管理，把 `.codebase/.gitignore` 中的 `.last-suggestion.diff` 放宽为 `.last-suggestion.*`（否则新的 meta 缓存会被误提交）。
+
+不需要重跑 `pagepack-init` 或 `pagepack-suggest-adapters`：pack 内容格式兼容，agent entry file 的接入指令未变。`examples/behaviors/` 目录只在真的沉淀了横切行为约定时才需要。
 
 ## 安全模型
 

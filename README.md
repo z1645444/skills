@@ -29,5 +29,5 @@ Claude、Codex 和 Antigravity 使用符号链接；Gemini CLI 需要复制并�
 
 ## Skills
 
-- [Pagepack](docs/pagepack-quickstart.md): 为 management system frontend 项目生成仓库本地的 `.codebase/` 运行时认知文档。
+- [Pagepack](docs/pagepack-quickstart.md): 为 management system frontend 项目生成并持续维护仓库本地的 `.codebase/` 运行时认知文档（bootstrap / 增量沉淀 / 完整性校验 / 机械化应用）。
 
