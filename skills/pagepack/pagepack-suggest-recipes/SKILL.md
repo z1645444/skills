@@ -58,6 +58,7 @@ If the user provides trailing text after `pagepack-suggest-recipes`, treat it as
 - `pagepack-suggest-recipes focus on list pages with filters`
 - `pagepack-suggest-recipes only dashboard patterns`
 - `pagepack-suggest-recipes extract shared table behaviors`
+- `pagepack-suggest-recipes focus on the modules touched by recent commits`
 
 The output must still be concrete, applicable patch/diffs, not a freeform conversation response.
 
