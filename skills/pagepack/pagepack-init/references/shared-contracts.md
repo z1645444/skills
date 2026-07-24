@@ -52,11 +52,20 @@ Gitignoring `.codebase/` remains valid for solo throwaway usage; version control
 
 Every `pagepack-suggest-*` capability, after presenting its patch:
 
-- writes the complete unified diff to `.codebase/.last-suggestion.diff`;
-- combines multiple file patches into one diff;
-- overwrites existing cache content without prompting.
+- writes the complete combined unified diff to `.codebase/.last-suggestion.diff`;
+- writes `.codebase/.last-suggestion.meta` in the same run:
 
-`.codebase/.last-suggestion.diff` is a tool runtime cache, not a Runtime Doc. Coding agents must not read or reference it during normal tasks. Only the most recent suggestion is cached; running another `pagepack-suggest-*` capability overwrites it. `pagepack-apply-suggestion` reads this cache when no explicit patch is provided.
+  ```text
+  version 1
+  baseHash <repo-relative-path> <first 12 hex chars of sha256>
+  ```
+
+  one `baseHash` line per existing file touched by the diff; created files get no line;
+- overwrites both cache files without prompting.
+
+The hash algorithm is sha256, truncated to the first 12 hex characters.
+
+Both files are tool runtime caches, not Runtime Docs. Coding agents must not read or reference them during normal tasks. Only the most recent suggestion is cached; running another `pagepack-suggest-*` capability overwrites both. `pagepack-apply-suggestion` reads the cache when no explicit patch is provided, and consults `.last-suggestion.meta` only in that case — a user-provided patch never uses the cached meta.
 
 ## Router Coverage Invariant
 
@@ -118,6 +127,18 @@ Hand edits by maintainers are allowed everywhere; ownership names the capability
 `examples/page-types/` holds Page Recipes for recurring page shapes. `examples/behaviors/` holds Behavior Recipes: conventions that cut across page shapes, such as query/table behavior, request lifecycle, or shared interaction constraints. Both doc types follow the same evidence, confidence, and Router Coverage requirements.
 
 Do not create `.codebase/meta/`, manifest, evidence, suggestion bundles, or candidate files.
+
+## Pack Versioning
+
+`router.md` starts with a version marker comment:
+
+```text
+<!-- pagepack: 2 -->
+```
+
+- Version 2 is the current schema: `examples/` split into `page-types/` and `behaviors/`, Router Coverage Invariant, suggestion cache with the meta sidecar.
+- A pack without a marker is version 1 (pre-behaviors layout). Capabilities must not assume version 2 structure on a version 1 pack; recommend adding the marker via a router patch once the pack matches version 2 expectations.
+- `pagepack-init` writes the marker at bootstrap. `pagepack-check-pack` warns when it is missing.
 
 ## Language Policy
 

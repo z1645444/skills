@@ -68,7 +68,7 @@ Claude Code、Codex CLI 和 Gemini CLI（experimental）支持在 `pagepack-init
 
 ## 安全模型
 
-- `pagepack-suggest-*` 输出 unified diff patch，并将同一份 diff 写入 `.codebase/.last-suggestion.diff` 作为工具运行时缓存，不直接修改 Runtime Docs；对已有文件必须携带 `baseHash`。
-- `pagepack-apply-suggestion` 默认读取 `.codebase/.last-suggestion.diff` 并应用；也接受显式 patch 作为覆盖。apply 成功后自动运行 `pagepack-check-pack` 的机械检查做基线对比，区分补丁引入问题与存量欠账，只报告不回滚。
+- `pagepack-suggest-*` 输出 unified diff patch，并把同一份 diff 与记录 `baseHash`（sha256 前 12 位）的 `.last-suggestion.meta` 一起写入 `.codebase/` 作为工具运行时缓存，不直接修改 Runtime Docs。
+- `pagepack-apply-suggestion` 的 guard、hash 校验、应用与基线对比校验由 `apply.sh` 脚本机械执行：默认读取缓存并校验 meta 中的 hash（跨会话生效）；显式提供的 patch 跳过缓存 meta。apply 成功后自动区分补丁引入问题（INTRODUCED）与存量欠账（PRE-EXISTING），只报告不回滚。
 - `pagepack-check-pack` 只读，不产出 patch；发现的问题按类别路由到对应的 `pagepack-suggest-*` 能力修复。
-- `pagepack-init` 在没有 `.codebase/` 时直接创建 Runtime Docs。
+- `pagepack-init` 在没有 `.codebase/` 时直接创建 Runtime Docs，并在 `router.md` 首行写入版本标记 `<!-- pagepack: 2 -->`。

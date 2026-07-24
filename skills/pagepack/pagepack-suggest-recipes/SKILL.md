@@ -45,7 +45,7 @@ Before creating recipe patches, read `../pagepack-init/references/shared-contrac
    - Include `baseHash` for every existing file touched by the patch.
    - Do not write files under `.codebase/` directly.
 
-7. Cache the last suggestion per the shared Suggestion Cache Protocol: write the complete combined unified diff to `.codebase/.last-suggestion.diff`, overwriting existing content.
+7. Cache the last suggestion per the shared Suggestion Cache Protocol: write the combined unified diff to `.codebase/.last-suggestion.diff` and the `baseHash` lines for touched existing files to `.codebase/.last-suggestion.meta`, overwriting both.
 
 8. Report result.
    - Summarize discovered patterns, Representative Page candidates, confidence, source references, and proposed files.

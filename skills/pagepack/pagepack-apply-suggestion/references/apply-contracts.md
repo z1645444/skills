@@ -2,36 +2,38 @@
 
 This reference defines the application contract for Pagepack patches. Read `../../pagepack-init/references/shared-contracts.md` first for Agent Scope, Suggestion Cache Protocol, and Language Policy.
 
-## Execution Order
+## Script Contract
 
-Apply runs in this order:
+`scripts/apply.sh` is the single source of truth for apply behavior. The skill never reimplements its steps inline.
 
 ```text
-1. Resolve Agent Scope
-2. Accept patch input
-3. Run Apply Guard
-4. Record verification baseline
-5. Apply patch
-6. Run Post-Apply Verification
-7. Report result
+usage: apply.sh [repo-root] [--patch <file>] [--dry-run]
+
+pipeline
+  1. parse unified diff headers (create vs patch semantics per file)
+  2. existence guard: create targets must not exist, patch targets must
+  3. baseHash guard: cache-sourced patches verify .last-suggestion.meta
+     (sha256, first 12 hex chars); explicit patches skip this guard
+  4. dry-run precheck: the whole diff must apply cleanly before any write
+  5. verification baseline: run check-pack before writing
+  6. apply the diff (POSIX patch; -p0 or -p1 auto-detected from headers)
+  7. rerun check-pack; diff findings against the baseline
+  8. report INTRODUCED / RESOLVED / PRE-EXISTING sections
+
+exit codes
+  0  applied cleanly; no findings introduced (or verification skipped,
+     stated in output)
+  3  applied, but the patch introduced new check findings
+  1  guard blocked (BLOCKED: lines, nothing written) or apply failed
+  2  usage error
 ```
 
-No file write may happen before the guard passes.
+Delete and rename operations are rejected by the guard. Renames are expressed as create plus router rewiring in suggest patches; stale documents are removed manually or via a dedicated cleanup patch reviewed by the maintainer.
 
-## Agent Scope
+## Input Sources
 
-Every apply run needs Agent Scope.
-
-- If current agent is known, use it as the default scope.
-- If current agent is unknown, stop and ask for `--agent` or `--all`.
-- `--all` expands compatibility/adapter scope, not pack count.
-
-## Input Format
-
-The skill accepts input in one of two ways:
-
-1. An explicit unified diff patch directly from the user. It does not read persisted suggestion JSON/MD bundles or a manifest.
-2. When no explicit patch is provided, the skill reads `.codebase/.last-suggestion.diff`, a tool runtime cache written by `pagepack-suggest-*` skills. This file is not a Runtime Doc; agents should not read or reference it during normal coding.
+1. An explicit unified diff from the user, passed via `--patch <file>`. The cached meta is never consulted for explicit patches, so their baseHash safety depends on the user providing a fresh diff.
+2. The tool runtime cache `.codebase/.last-suggestion.diff` with `.codebase/.last-suggestion.meta`, written by `pagepack-suggest-*` skills per the shared Suggestion Cache Protocol. This is the default and the only path with mechanical hash verification.
 
 Example of an explicit patch:
 
@@ -48,79 +50,34 @@ Example of an explicit patch:
  ...
 ```
 
-An optional `baseHash` may accompany the patch for the target file. It is the only safety guard beyond file existence and clean patch application.
+For a new file the source path is `/dev/null` (create semantics).
 
-## Supported Operations
+## Guard Rules
 
-The input is always a unified diff. The diff implies one of:
+The guard blocks stale or unsafe application before anything is written:
 
-- `create` semantics: source path is `/dev/null`;
-- `patch` semantics: source path is an existing file.
-
-Reject delete, move, chmod, shell commands, environment mutation, network actions, or hidden side effects. If a patch contains such operations, block and report.
-
-## Apply Guard
-
-Apply Guard blocks stale or unsafe application. It checks:
-
-### File Existence
-
-Verify that target file existence matches the patch:
-
-- `create` semantics: target must not exist.
-- `patch` semantics: target must exist.
-
-If the user explicitly requests overwrite, treat it as a manual exception and report it clearly.
-
-### Last-Suggestion Cache
-
-When no explicit patch is provided, the skill reads `.codebase/.last-suggestion.diff`. Block and recommend running a `pagepack-suggest-*` skill first when:
-
-- the cache file is missing;
-- the cache file is empty;
-- the cache file does not contain a valid unified diff.
-
-### Base Hash
-
-If a `baseHash` is provided:
-
-- compute the current target file hash;
-- compare with the provided `baseHash`;
-- mismatch -> block;
-- missing target unexpectedly -> block.
-
-If no `baseHash` is provided, proceed with file existence and clean patch checks only. This is allowed for manual patches, but `pagepack-suggest-*` capabilities always provide `baseHash` for existing files; without it, manual edits between suggestion and application may cause the patch to fail.
-
-## Patch Application
-
-Apply the unified diff to the target file.
-
-- Attempt clean application.
-- If the patch fails, stop and report failure without leaving a partial file when possible.
-- Parent directories may be created for new files.
+- create semantics: target must not exist (explicit user-confirmed overwrite is a manual exception, applied outside the script and reported clearly);
+- patch semantics: target must exist;
+- cache-sourced patches: every `baseHash` line in `.last-suggestion.meta` must match the current file hash;
+- the full diff must pass a dry-run precheck;
+- a missing, empty, or malformed cache with no explicit patch blocks with a recommendation to run a `pagepack-suggest-*` skill first.
 
 ## Post-Apply Verification
 
-After a successful apply, run the `pagepack-check-pack` mechanical checks in baseline-diff mode:
+After a successful apply, the script reruns the `pagepack-check-pack` mechanical checks and compares against the pre-apply baseline:
 
 ```text
-baseline
-  run scripts/check-pack.sh (from the pagepack-check-pack skill,
-  resolved as a sibling of this skill's directory) before applying
-
-post-apply
-  run the same script again after applying
-
-introduced = post-apply findings not in baseline  -> report prominently,
-             with fix routing from the check contracts
-pre-existing = findings in both runs              -> report as notes
-resolved   = baseline findings gone after apply   -> report as resolved
+INTRODUCED    findings only in the post-apply run
+              -> caused by this patch; report prominently with fix
+                 routing from the check contracts
+RESOLVED      baseline findings gone after apply -> fixed by this patch
+PRE-EXISTING  findings in both runs -> prior debt, reported as notes
 ```
 
 Rules:
 
-- verification is automatic; it must run on every successful apply;
-- if `.codebase/` or the check script is unavailable, skip verification and state the reason in the report;
+- verification is automatic on every successful apply;
+- if `.codebase/` or the check script is unavailable, verification is skipped and the output says so;
 - verification never blocks or rolls back the applied patch — the patch was human-reviewed before apply; introduced findings get a recommended follow-up patch instead;
 - adapter patches targeting files outside `.codebase/` still trigger verification; the pack state should be unchanged, and the baseline diff proves it.
 
@@ -128,16 +85,12 @@ Rules:
 
 Success summary should include:
 
-- target file;
-- whether the file was created or patched;
-- any `baseHash` that was verified;
-- Post-Apply Verification outcome: introduced / pre-existing / resolved finding counts, or the skip reason.
+- applied files, and whether each was created or patched;
+- verification outcome: INTRODUCED / RESOLVED / PRE-EXISTING counts, or the skip reason.
 
 Blocked summary should include:
 
-- failed guard;
-- path involved;
-- expected and current state when safe to show;
-- recommendation to regenerate the patch.
+- the `BLOCKED:` reasons verbatim;
+- the recommendation to regenerate the patch via the owning `pagepack-suggest-*` capability.
 
 Never print secrets or credential values when reporting hashes, files, or diffs.

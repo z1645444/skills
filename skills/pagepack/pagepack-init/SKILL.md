@@ -45,7 +45,7 @@ Before creating an initial pack, read `references/shared-contracts.md` (family-w
    - Derive `.codebase/rules/*.md` directly from the knowledge summaries and Confidence Gate. The main agent holds full context for rule synthesis; do not spawn a separate rules subagent.
    - Prepare router and high-confidence examples before writing.
    - Create the complete Practical Core structure in one bootstrap pass.
-   - Write `.codebase/router.md`, `.codebase/knowledge/*`, `.codebase/rules/*`, and high-confidence `.codebase/examples/page-types/*` (plus `examples/behaviors/*` when cross-cutting behavior evidence is high-confidence).
+   - Write `.codebase/router.md` (starting with the pack version marker), `.codebase/knowledge/*`, `.codebase/rules/*`, and high-confidence `.codebase/examples/page-types/*` (plus `examples/behaviors/*` when cross-cutting behavior evidence is high-confidence).
    - Wire every created `examples/` document into at least one router route (Router Coverage Invariant).
    - Do not create `meta/`, `manifest.json`, evidence files, suggestion bundles, or candidate files.
    - Do not modify `AGENTS.md` or `CLAUDE.md`.

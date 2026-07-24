@@ -4,9 +4,7 @@ This reference defines the contract for Agent Adapter patches. Read `../../pagep
 
 ## Scope
 
-`pagepack-suggest-adapters` produces directly applicable patches for agent entry files. It does not write suggestion bundles under `.codebase/` and does not directly modify agent entry files.
-
-After outputting the patch, it writes the same unified diff to `.codebase/.last-suggestion.diff` so `pagepack-apply-suggestion` can apply it by default. This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
+`pagepack-suggest-adapters` produces directly applicable patches for agent entry files. It does not write suggestion bundles under `.codebase/` and does not directly modify agent entry files. Cache handling follows the shared Suggestion Cache Protocol.
 
 It reads:
 

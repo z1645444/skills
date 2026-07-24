@@ -28,8 +28,14 @@ C3  pack cross-references
   Severity: ERROR.
 
 C4  cache hygiene
-  Runtime Docs must not reference .last-suggestion.diff; it is a tool
-  runtime cache that coding agents should never read.
+  Runtime Docs must not reference the .last-suggestion.* cache files;
+  they are tool runtime caches that coding agents should never read.
+  Severity: WARN.
+
+C5  pack version marker
+  router.md must start with the version marker comment
+  (<!-- pagepack: 2 -->) defined in the shared contracts, so
+  capabilities can adapt to older pack layouts.
   Severity: WARN.
 ```
 
@@ -53,6 +59,8 @@ C2 -> pagepack-suggest-knowledge (router repair) or
       pagepack-suggest-recipes (rewiring alongside recipe changes)
 C3 -> the suggest capability owning the referencing document
 C4 -> remove the cache reference from the Runtime Doc
+C5 -> add the version marker via a router patch once the pack matches
+      version 2 expectations (see shared contracts, Pack Versioning)
 ```
 
 ## Post-Apply Verification

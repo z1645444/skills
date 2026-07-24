@@ -64,7 +64,7 @@ Generate `.codebase/router.md` from stable route types:
 - New Page/Module
 - Style/CSS Change
 
-Fill links dynamically based on available Runtime Docs. Every created `examples/` document must be explicitly wired into at least one route (Router Coverage Invariant). Do not invent project-specific route categories during bootstrap.
+The router file must begin with the pack version marker defined in the shared contracts (`<!-- pagepack: 2 -->`). Fill links dynamically based on available Runtime Docs. Every created `examples/` document must be explicitly wired into at least one route (Router Coverage Invariant). Do not invent project-specific route categories during bootstrap.
 
 ## UI Decision Ladder
 

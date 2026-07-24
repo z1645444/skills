@@ -45,12 +45,7 @@ Before creating an adapter patch, read `../pagepack-init/references/shared-contr
    - Include target file, `baseHash` for existing files, and a concise summary of changes.
    - Do not write files under `.codebase/` or modify agent entry files directly.
 
-7. Cache the last suggestion.
-   - Write the complete unified diff to `.codebase/.last-suggestion.diff`.
-   - If multiple files are patched, write the combined diff.
-   - This file is a tool runtime cache, not a Runtime Doc; agents should not read or reference it.
-   - Overwrite any existing content without prompting.
-   - Only the most recent suggestion is cached; running another `pagepack-suggest-*` skill overwrites it.
+7. Cache the last suggestion per the shared Suggestion Cache Protocol: write the combined unified diff to `.codebase/.last-suggestion.diff` and the `baseHash` lines for touched existing files to `.codebase/.last-suggestion.meta`, overwriting both.
 
 8. Report result.
    - Summarize target agents, entry files, create/patch operations, and warnings.

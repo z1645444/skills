@@ -7,7 +7,8 @@
 #   C1  source references     backtick repo paths in pack docs must exist on disk
 #   C2  router coverage       every examples/ doc must be explicitly listed in router.md
 #   C3  pack cross-references .codebase/*.md references must resolve
-#   C4  cache hygiene         Runtime Docs must not reference .last-suggestion.diff
+#   C4  cache hygiene         Runtime Docs must not reference .last-suggestion.*
+#   C5  pack version marker   router.md must start with <!-- pagepack: N -->
 #
 # Output: one line per finding: "<LEVEL> <CODE> <doc> :: <detail>", then a summary.
 # Exit codes: 0 = no errors, 1 = errors (or warnings with --strict), 2 = usage/pack missing.
@@ -104,10 +105,15 @@ fi
 # C4: Runtime Docs must not reference the tool runtime cache.
 find "$pack" -name '*.md' -not -path '*/.git/*' | while IFS= read -r doc; do
   rel_doc=${doc#"$root"/}
-  if grep -q "last-suggestion.diff" "$doc"; then
-    echo "WARN C4 $rel_doc :: Runtime Doc references the tool runtime cache .last-suggestion.diff"
+  if grep -q "last-suggestion" "$doc"; then
+    echo "WARN C4 $rel_doc :: Runtime Doc references the tool runtime cache .last-suggestion.*"
   fi
 done >> "$findings"
+
+# C5: pack version marker on the first router line.
+if [ -f "$router" ] && ! head -n 1 "$router" | grep -q "pagepack:"; then
+  echo "WARN C5 .codebase/router.md :: missing pack version marker (<!-- pagepack: 2 -->)" >> "$findings"
+fi
 
 sort -u "$findings" > "$findings.sorted" && mv "$findings.sorted" "$findings"
 cat "$findings"
