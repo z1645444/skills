@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pagepack Suggest Knowledge"
-  short_description: "Refresh stale .codebase knowledge and router structure"
-  default_prompt: "Use $pagepack-suggest-knowledge to propose minimal refresh patches for stale .codebase/knowledge docs and router structure repairs."

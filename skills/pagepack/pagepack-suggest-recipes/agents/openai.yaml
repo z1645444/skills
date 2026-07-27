@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pagepack Suggest Recipes"
-  short_description: "Generate page recipe patches"
-  default_prompt: "Use $pagepack-suggest-recipes to generate unified diff patches for .codebase/examples/page-types/. Add trailing text for directional guidance."

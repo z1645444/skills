@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pagepack Suggest Rules"
-  short_description: "Generate coding rule patches"
-  default_prompt: "Use $pagepack-suggest-rules to generate unified diff patches for .codebase/rules/. Add trailing text for directional guidance."

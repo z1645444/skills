@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pagepack Check Pack"
-  short_description: "Run integrity checks on .codebase Runtime Docs"
-  default_prompt: "Use $pagepack-check-pack to run mechanical integrity checks on the .codebase pack and report findings with fix routing."
