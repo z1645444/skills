@@ -11,16 +11,25 @@ description: Create the initial .codebase/ best practice pack for a management w
 
 1. 若项目已存在 `.codebase/`，停止并引导用户改用 `pagepack-refresh`。
 2. 确认这是一个前端项目（存在 `package.json`、框架依赖）。不是则说明 Pagepack 不适用并停止。
+3. `AGENTS.md` / `CLAUDE.md` 的存在性以仓库文件系统中的实际文件为准。
 
 ## 探测
 
-默认并行派出三个 subagent 收集信号；若当前环境不支持 subagent 或多次失败，则退化为按同样分工顺序逐项自行执行。
+默认并行派出三个 subagent 收集信号；若当前环境未提供协作能力，或任意一次 subagent 调度失败，则立即退化为按同样分工顺序逐项自行执行，不进行额外重试。
 
 三路分工，各自返回结构化结论（不写文件）：
 
 1. **页面类型盘点**：读路由配置与 views/pages 目录，归类项目里的页面类型（列表页、表单页、详情页、弹窗 CRUD、Tab 复合页等），每类给出全部实例文件路径、判断哪个实例最典型完整、指出偏离主流写法的遗留实例。产出决定 `practices/pages/` 下的文件清单。
 2. **组件封装盘点**：找出项目自封装的通用组件与高频使用的 UI 库组件用法（表格封装、查询表单、弹窗、上传、权限控件等），每项给出使用示例文件与典型调用方式。产出决定 `practices/components/` 下的文件清单。
 3. **api 层与文件结构**：请求封装、api 函数定义方式、数据流约定；目录组织、命名约定、新页面/新模块落在哪里。产出对应 `api.md` 与 `structure.md`。
+
+探测结果验收：
+
+- 每个结论必须附带真实文件路径证据。
+- 生成 practice 前必须已经识别到对应 pattern 的真实来源文件。
+- 证据不足时宁可减少 practice 数量，也不要创建占位文件。
+
+若未能识别任何可提炼的 pattern，视为生成失败：报告已检查的证据与原因，停止生成，不创建仅用于占位的 `.codebase/` 内容。
 
 ## 提炼与写入
 
@@ -38,6 +47,20 @@ description: Create the initial .codebase/ best practice pack for a management w
 ```
 
 practice 文件名用英文 kebab-case，如 `table-list.md`、`search-form.md`。
+
+禁止生成空内容文件。以下情况视为失败：
+
+- 只有标题和文件名。
+- 只有模板段落或占位符。
+- 没有 code block。
+- 没有真实参考实现路径。
+- 内容无法对应探测阶段发现的实际代码。
+
+最终验收：
+
+- README 中列出的每个 practice 必须实际存在且满足上述要求。
+- 至少生成一个有效 practice（pages、components、api 或 structure 任一类别）。
+- 不满足验收条件时终止生成并报告原因，不输出空壳 `.codebase/`。
 
 每条 practice 必须遵循提炼式形态：
 

@@ -33,7 +33,7 @@ description: Maintain an existing .codebase/ best practice pack. With a natural 
 ## 编辑约束
 
 - 只做最小必要修改，不整体重写文件；用户手工润色过的措辞尽量保留。
-- 新增/删除 practice 文件时同步更新 `README.md` 索引。
+- 新增/删除/重命名 practice 文件时同步重建 `README.md` 索引；README 视为由 practice 集合推导出的索引文件，不作为独立事实来源。
 - 语言跟随该 practice 文件现有语言；新建文件跟随 pack 内其他 practice 的语言。
 
 ## 收尾汇报
