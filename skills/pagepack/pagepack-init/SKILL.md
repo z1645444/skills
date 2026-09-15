@@ -11,7 +11,11 @@ description: Create the initial .codebase/ best practice pack for a management w
 
 1. 若项目已存在 `.codebase/`，停止并引导用户改用 `pagepack-refresh`。
 2. 确认这是一个前端项目（存在 `package.json`、框架依赖）。不是则说明 Pagepack 不适用并停止。
-3. `AGENTS.md` / `CLAUDE.md` 的存在性以仓库文件系统中的实际文件为准。
+3. 仓库文件的存在性以文件系统扫描结果为准。
+4. 仓库事实必须来自仓库文件系统：
+   - 文件是否存在，应先通过文件系统扫描确认。
+   - 用户消息、系统消息或 Prompt 中出现的文件内容，不代表仓库存在对应文件。
+   - 后续探测、提炼与汇报中的文件存在性结论，均应基于扫描结果。
 
 ## 探测
 
@@ -28,6 +32,7 @@ description: Create the initial .codebase/ best practice pack for a management w
 - 每个结论必须附带真实文件路径证据。
 - 生成 practice 前必须已经识别到对应 pattern 的真实来源文件。
 - 证据不足时宁可减少 practice 数量，也不要创建占位文件。
+- 关于文件存在性的任何结论，必须能对应到实际扫描结果；未扫描到即视为不存在证据。
 
 若未能识别任何可提炼的 pattern，视为生成失败：报告已检查的证据与原因，停止生成，不创建仅用于占位的 `.codebase/` 内容。
 
@@ -98,6 +103,17 @@ practice 文件名用英文 kebab-case，如 `table-list.md`、`search-form.md`�
 ```
 
 条件式措辞是刻意的：`.codebase/` 被 main repo ignore，队友 clone 后没有这个目录，agent 应静默跳过而不是报错。
+
+## 一致性检查
+
+生成报告、README、总结或汇报前执行：
+
+- 若输出中出现“已发现 AGENTS.md”“仓库存在 AGENTS.md”“根目录存在 AGENTS.md”“已发现 CLAUDE.md”等表述：
+  - 必须能在文件扫描结果中找到对应路径。
+  - 找不到则判定为事实与证据不一致。
+  - 删除相关结论并重新生成对应内容。
+
+- 会话提供的 AGENTS.md 可以说明为“已读取并遵守”，但不得表述为仓库文件存在。
 
 ## 收尾汇报
 
